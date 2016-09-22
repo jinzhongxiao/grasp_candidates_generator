@@ -44,4 +44,4 @@ target_link_libraries(plot ${PCL_LIBRARIES})
 # Set the location for library installation -- i.e., /usr/lib in this case not really necessary in this example. Use 
 # "sudo make install" to apply
 install(TARGETS grasp_candidates_generator DESTINATION /usr/lib)
-install(DIRECTORY include/grasp_candidates_generator DESTINATION /usr/local/include/grasp_candidates_generator)
+install(DIRECTORY include/grasp_candidates_generator DESTINATION /usr/local/include)
