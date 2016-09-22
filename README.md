@@ -1,23 +1,24 @@
-# grasp_candidates_generator 
+# Grasp Candidates Generator
 ## (part of agile_grasp 2.0) 
 
 * **Author:** Andreas ten Pas (atp@ccs.neu.edu)
 * **Version:** 1.0.0
 * **Author's website:** [http://www.ccs.neu.edu/home/atp/](http://www.ccs.neu.edu/home/atp/)
-* **License: BSD
+* **License:** BSD
 
 
 ## 1) Overview
 
-This package generates grasp candidates for 3D point clouds. AGILE stands for **A**ntipodal **G**rasp **I**dentification and 
-**LE**arning. The reference for this package is: 
-[High precision grasp pose detection in dense clutter](http://arxiv.org/abs/1603.01564). *agile_grasp 2.0* is an improved 
-version of our previous package, [agile_grasp](http://wiki.ros.org/agile_grasp).
+This package creates grasp candidates for 3D point clouds and can check if they are antipodal using geometric 
+conditions. To use the package, you only need PCL and Eigen (see below).
 
 <img src="readme/robot1.png" alt="" style="width: 400px;"/>
 
-This part of the package creates grasp candidates and can check if they are antipodal using geometric conditions. Please 
-notice that **no** machine learning is included in this part.
+This package is part of AGILE 2.0 which stands for **A**ntipodal **G**rasp **I**dentification and 
+**LE**arning. The reference for this package is: 
+[High precision grasp pose detection in dense clutter](http://arxiv.org/abs/1603.01564). *agile_grasp 2.0* is an improved 
+version of our previous package, [agile_grasp](http://wiki.ros.org/agile_grasp). Please notice that **no** machine learning is 
+included in this part.
 
 
 ## 2) Requirements
@@ -28,7 +29,7 @@ notice that **no** machine learning is included in this part.
 
 ## 3) Compilation
 
-1. Clone the grasp_candidates_generator repository into some folder: 
+1. Clone the *grasp_candidates_generator* repository into some folder: 
 
    ```
    $ cd <location_of_your_workspace>
