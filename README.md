@@ -12,7 +12,7 @@
 This package creates grasp candidates for 3D point clouds and can check if they are antipodal using geometric 
 conditions. To use the package, you only need PCL and Eigen (see below).
 
-<img src="readme/robot1.png" alt="" style="width: 400px;"/>
+<img src="readme/examples.png" alt="" style="width: 400px;"/>
 
 This package is part of AGILE 2.0 which stands for **A**ntipodal **G**rasp **I**dentification and 
 **LE**arning. The reference for this package is: 
