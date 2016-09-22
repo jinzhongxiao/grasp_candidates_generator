@@ -14,7 +14,9 @@
 #include <pcl/point_types.h>
 
 // Custom
+#include <grasp_candidates_generator/cloud_camera.h>
 #include <grasp_candidates_generator/hand_search.h>
+#include <grasp_candidates_generator/plot.h>
 
 
 class GraspCandidatesGenerator

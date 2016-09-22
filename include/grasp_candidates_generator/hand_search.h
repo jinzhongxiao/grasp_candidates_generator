@@ -49,8 +49,8 @@
 #include <grasp_candidates_generator/frame_estimator.h>
 #include <grasp_candidates_generator/grasp_hypothesis.h>
 #include <grasp_candidates_generator/local_frame.h>
-#include <grasp_candidates_generator/point_list.h>
 #include <grasp_candidates_generator/plot.h>
+#include <grasp_candidates_generator/point_list.h>
 
 
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;

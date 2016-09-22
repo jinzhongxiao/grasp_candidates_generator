@@ -20,11 +20,6 @@ int Antipodal::evaluateGrasp(const PointList& point_list, double extremal_thresh
   const Eigen::Matrix3Xd& pts = point_list.getPoints();
   const Eigen::Matrix3Xd& normals = point_list.getNormals();
 
-//  Plot plotter;
-//  plotter.plotNormals(pts, normals);
-//  std::cout << "pts: " << pts.rows() << " x " << pts.cols() << "\n";
-//  std::cout << "normals: " << normals.rows() << " x " << normals.cols() << "\n";
-
   // Select points that are extremal and have their surface normal within the friction cone of the closing direction.
   Eigen::Vector3d l, r;
   if (lateral_axis == 0)

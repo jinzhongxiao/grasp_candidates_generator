@@ -41,7 +41,6 @@
 #include <Eigen/Dense>
 
 #include <grasp_candidates_generator/point_list.h>
-#include <grasp_candidates_generator/plot.h>
 
 
 /** Antipodal class

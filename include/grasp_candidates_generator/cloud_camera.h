@@ -41,8 +41,6 @@
 
 #include <Eigen/Dense>
 
-#include <ros/ros.h>
-
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/filters/random_sample.h>
 #include <pcl/search/kdtree.h>
