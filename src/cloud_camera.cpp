@@ -130,6 +130,28 @@ void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
 }
 
 
+void CloudCamera::filterSamples(const std::vector<double>& workspace)
+{
+  std::vector<int> indices;
+  for (int i = 0; i < samples_.size(); i++)
+  {
+    if (samples_(0,i) > workspace[0] && samples_(0,i) < workspace[1]
+        && samples_(1,i) > workspace[2] && samples_(1,i) < workspace[3]
+        && samples_(2,i) > workspace[4] && samples_(2,i) < workspace[5])
+    {
+      indices.push_back(i);
+    }
+  }
+
+  Eigen::Matrix3Xd filtered_samples(3, indices.size());
+  for (int i = 0; i < indices.size(); i++)
+  {
+    filtered_samples.col(i) = samples_.col(i);
+  }
+  samples_ = filtered_samples;
+}
+
+
 void CloudCamera::voxelizeCloud(double cell_size)
 {
   Eigen::MatrixXf pts = cloud_processed_->getMatrixXfMap();
@@ -204,6 +226,35 @@ void CloudCamera::subsampleUniformly(int num_samples)
 //  for (int i=0; i < sample_indices_.size(); i++)
 //    std::cout << sample_indices_[i] << " ";
 //  std::cout << "\n";
+}
+
+
+void CloudCamera::subsampleSamples(int num_samples)
+{
+  // use all incoming samples
+  if (num_samples == 0 || num_samples >= samples_.cols())
+  {
+    std::cout << "Using all " << samples_.cols() << " samples.\n";
+  }
+  // subsample the incoming samples
+  else
+  {
+    std::vector<int> seq(samples_.size());
+    for (int i = 0; i < seq.size(); i++)
+    {
+      seq[i] = i;
+    }
+    std::random_shuffle(seq.begin(), seq.end());
+
+    Eigen::Matrix3Xd subsamples(3, num_samples);
+    for (int i = 0; i < samples_.cols(); i++)
+    {
+      subsamples.col(i) = samples_.col(seq[i]);
+    }
+    samples_ = subsamples;
+
+    std::cout << "Subsampled " << samples_.cols() << " samples at random uniformly.\n";
+  }
 }
 
 

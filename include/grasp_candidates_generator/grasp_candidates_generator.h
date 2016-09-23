@@ -37,7 +37,7 @@ class GraspCandidatesGenerator
 
     void preprocessPointCloud(CloudCamera& cloud_cam);
 
-    std::vector<GraspHypothesis> generateGraspCandidates(CloudCamera& cloud_cam);
+    std::vector<GraspHypothesis> generateGraspCandidates(const CloudCamera& cloud_cam);
 
 
   private:

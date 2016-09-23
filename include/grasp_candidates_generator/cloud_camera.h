@@ -82,6 +82,8 @@ public:
   */
   void filterWorkspace(const std::vector<double>& workspace);
 
+  void filterSamples(const std::vector<double>& workspace);
+
   /**
    * \brief Voxelize the point cloud and keep track of the camera source for each voxel.
    * \param[in] cell_size the size of each voxel
@@ -93,6 +95,8 @@ public:
    * \param[in] num_samples the number of samples to draw from the point cloud
   */
   void subsampleUniformly(int num_samples);
+
+  void subsampleSamples(int num_samples);
 
   void calculateNormals(int num_threads);
 

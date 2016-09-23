@@ -30,6 +30,7 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
     //    plotter.drawCloud(cloud_cam.getCloudProcessed(), "after");
   }
 
+  // no indices into point cloud given
   if (cloud_cam.getSampleIndices().size() == 0)
   {
     // 1. Workspace filtering
@@ -43,22 +44,15 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
       std::cout << "After voxelization: " << cloud_cam.getCloudProcessed()->size() << " points left.\n";
     }
 
-//    // 3. Subsampling
-//    if (use_incoming_samples_)
-//    {
-//      // remove samples outside of the workspace
-//      std::vector<geometry_msgs::Point> filtered_samples;
-//      for (int i = 0; i < samples_.size(); ++i)
-//      {
-//        const geometry_msgs::Point& p = samples_[i];
-//        if (p.x > ws(0) && p.x < ws(1) && p.y > ws(2) && p.y < ws(3) && p.z > ws(4) && p.z < ws(5))
-//          filtered_samples.push_back(p);
-//      }
-//      std::cout << "Workspace filtering removed " << samples_.size() - filtered_samples.size()  << " samples.\n";
-//
-//      std::cout << "Using " << filtered_samples.size() << " samples from external source.\n";
-//      cloud_cam.subsampleSamples(filtered_samples, num_samples_);
-//    }
+    // 3. Subsampling
+    if (cloud_cam.getSamples().cols() > 0)
+    {
+      // remove samples outside of the workspace
+      cloud_cam.filterSamples(params_.workspace_);
+
+      // subsample the remaining samples
+      cloud_cam.subsampleSamples(params_.num_samples_);
+    }
 
     // 3. Subsampling
     if (params_.num_samples_ > cloud_cam.getCloudProcessed()->size())
@@ -76,6 +70,7 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
       std::cout << "Subsampled " << params_.num_samples_ << " at random uniformly.\n";
     }
   }
+  // indices into point cloud given
   else
   {
     if (params_.num_samples_ > 0 && params_.num_samples_ < cloud_cam.getSampleIndices().size())
@@ -88,7 +83,6 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
     }
     else
     {
-      cloud_cam.setSampleIndices(cloud_cam.getSampleIndices());
       std::cout << "Using all " << cloud_cam.getSampleIndices().size() << " indices.\n";
     }
   }
@@ -104,7 +98,7 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 }
 
 
-std::vector<GraspHypothesis> GraspCandidatesGenerator::generateGraspCandidates(CloudCamera& cloud_cam)
+std::vector<GraspHypothesis> GraspCandidatesGenerator::generateGraspCandidates(const CloudCamera& cloud_cam)
 {
   std::vector<GraspHypothesis> candidates = hand_search_.generateHypotheses(cloud_cam, 0, false);
   std::cout << "Generated " << candidates.size() << " grasp candidates.\n";
