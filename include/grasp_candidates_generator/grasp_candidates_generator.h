@@ -39,6 +39,11 @@ class GraspCandidatesGenerator
 
     std::vector<GraspHypothesis> generateGraspCandidates(const CloudCamera& cloud_cam);
 
+    void setNumSamples(int num_samples)
+    {
+      params_.num_samples_ = num_samples;
+    }
+
 
   private:
 
