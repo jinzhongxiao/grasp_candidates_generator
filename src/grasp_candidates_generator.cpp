@@ -98,9 +98,10 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 }
 
 
-std::vector<GraspHypothesis> GraspCandidatesGenerator::generateGraspCandidates(const CloudCamera& cloud_cam)
+std::vector<GraspHypothesis> GraspCandidatesGenerator::generateGraspCandidates(const CloudCamera& cloud_cam,
+  bool use_samples)
 {
-  std::vector<GraspHypothesis> candidates = hand_search_.generateHypotheses(cloud_cam, 0, false);
+  std::vector<GraspHypothesis> candidates = hand_search_.generateHypotheses(cloud_cam, 0, use_samples);
   std::cout << "Generated " << candidates.size() << " grasp candidates.\n";
 
   if (params_.plot_grasps_)
