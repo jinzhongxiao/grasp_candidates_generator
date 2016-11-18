@@ -29,20 +29,25 @@ included in this part.
 
 ## 3) Compilation
 
-1. Clone the *grasp_candidates_generator* repository into some folder: 
+1. Open a terminal and clone the *grasp_candidates_generator* repository into some folder: 
 
    ```
    $ cd <location_of_your_workspace>
    $ git clone https://atenpas@bitbucket.org/atenpas/grasp_candidates_generator.git
    ```
 
-2. Delete the *build* folder and rebuild the project: 
+2. Build the project: 
 
    ```
    $ cd grasp_candidates_generator
-   $ rm -rf build && mkdir build && cd build
+   $ mkdir build && cd build
    $ cmake ..
    $ make
+   ```
+
+3. (optional) Install the project:
+   ```
+   $ sudo make install
    ```
 
 
