@@ -65,11 +65,36 @@ class CloudCamera
 {
 public:
 
+  /**
+   * \brief Comparator for checking uniqueness of two 3D-vectors.
+  */
+  struct UniqueVectorComparator
+  {
+    /**
+     * \brief Compares two 3D-vectors for uniqueness.
+     * \param a the first 3D-vector
+     * \param b the second 3D-vector
+     * \return true if they have no equal elements, false otherwise
+    */
+    bool operator ()(const Eigen::Vector3i& a, const Eigen::Vector3i& b)
+    {
+      for (int i = 0; i < a.size(); i++)
+      {
+        if (a(i) != b(i))
+        {
+          return a(i) < b(i);
+        }
+      }
+
+      return false;
+    }
+  };
+
   CloudCamera();
 
-  CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Vector3d& view_point);
+  CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);
 
-  CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, const Eigen::Vector3d& view_point);
+  CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);
 
   CloudCamera(const std::string& filename);
 
@@ -146,6 +171,17 @@ public:
     normals_ = normals;
   }
 
+  const Eigen::Matrix3Xd& getViewPoints() const
+  {
+    return view_points_;
+  }
+
+  void setViewPoints(const Eigen::Matrix3Xd& view_points)
+  {
+    view_points_ = view_points;
+  }
+
+
 private:
 
   PointCloudRGB::Ptr loadPointCloudFromFile(const std::string& filename);
@@ -157,38 +193,13 @@ private:
   */
   Eigen::Vector3i floorVector(const Eigen::Vector3f& a);
 
-  /**
-   * \brief Comparator for checking uniqueness of two 3D-vectors.
-  */
-  struct UniqueVectorComparator
-  {
-    /**
-     * \brief Compares two 3D-vectors for uniqueness.
-     * \param a the first 3D-vector
-     * \param b the second 3D-vector
-     * \return true if they have no equal elements, false otherwise
-    */
-    bool operator ()(const Eigen::Vector3i& a, const Eigen::Vector3i& b)
-    {
-      for (int i = 0; i < a.size(); i++)
-      {
-        if (a(i) != b(i))
-        {
-          return a(i) < b(i);
-        }
-      }
-
-      return false;
-    }
-  };
-
   PointCloudRGB::Ptr cloud_processed_; ///< the (processed) point cloud
   PointCloudRGB::Ptr cloud_original_; ///< the original point cloud
   Eigen::MatrixXi camera_source_; ///< binary matrix: (i,j) = 1 if point j is seen by camera i
   Eigen::Matrix3Xd normals_; ///< the surface normal for each point in the point cloud
   std::vector<int> sample_indices_; ///< the indices into the point cloud used to sample grasp hypotheses
   Eigen::Matrix3Xd samples_; ///< the samples used for finding grasp hypotheses
-  Eigen::Vector3d view_point_; ///< the viewpoint of the camera on the cloud
+  Eigen::Matrix3Xd view_points_; ///< the viewpoints of the camera on the cloud
 };
 
 #endif /* CLOUD_CAMERA_H_ */

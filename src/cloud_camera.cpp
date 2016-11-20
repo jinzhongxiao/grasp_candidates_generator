@@ -4,12 +4,13 @@
 CloudCamera::CloudCamera()
   : cloud_original_(new PointCloudRGB), cloud_processed_(new PointCloudRGB)
 {
-  view_point_ << 0.0, 0.0, 0.0;
+  view_points_.resize(3,1);
+  view_points_ << 0.0, 0.0, 0.0;
 }
 
 
-CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Vector3d& view_point)
-  : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_point_(view_point)
+CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points)
+  : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
 {
   sample_indices_.resize(0);
   samples_.resize(3,0);
@@ -38,8 +39,8 @@ CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud
 }
 
 
-CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, const Eigen::Vector3d& view_point)
-  : cloud_processed_(cloud), cloud_original_(cloud), view_point_(view_point)
+CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points)
+  : cloud_processed_(cloud), cloud_original_(cloud), view_points_(view_points)
 {
   sample_indices_.resize(0);
 
@@ -60,7 +61,8 @@ CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, c
 
 CloudCamera::CloudCamera(const std::string& filename) : cloud_processed_(new PointCloudRGB)
 {
-  view_point_ << 0.0, 0.0, 0.0;
+  view_points_.resize(3,1);
+  view_points_ << 0.0, 0.0, 0.0;
   sample_indices_.resize(0);
   cloud_processed_ = loadPointCloudFromFile(filename);
   cloud_original_ = cloud_processed_;
@@ -72,7 +74,8 @@ CloudCamera::CloudCamera(const std::string& filename) : cloud_processed_(new Poi
 CloudCamera::CloudCamera(const std::string& filename_left, const std::string& filename_right)
   : cloud_processed_(new PointCloudRGB)
 {
-  view_point_ << 0.0, 0.0, 0.0;
+  view_points_.resize(3,1);
+  view_points_ << 0.0, 0.0, 0.0;
   sample_indices_.resize(0);
 
   // load and combine the two point clouds
@@ -277,7 +280,7 @@ void CloudCamera::calculateNormals(int num_threads)
   pcl::NormalEstimationOMP<pcl::PointXYZRGBA, pcl::Normal> estimator(num_threads);
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals_omp(new pcl::PointCloud<pcl::Normal>);
   pcl::search::KdTree<pcl::PointXYZRGBA>::Ptr tree_ptr(new pcl::search::KdTree<pcl::PointXYZRGBA>);
-  estimator.setViewPoint(view_point_(0), view_point_(1), view_point_(2));
+  estimator.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
 //  std::cout << " view_point: " << view_point(0) << " " << view_point(1) << " " << view_point(2) << "\n";
   estimator.setInputCloud(cloud_processed_);
   estimator.setSearchMethod(tree_ptr);

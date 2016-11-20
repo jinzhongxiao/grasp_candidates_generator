@@ -45,12 +45,19 @@ class PointList
 
     PointList() { }
 
-    PointList(const Eigen::Matrix3Xd& points, const Eigen::Matrix3Xd& normals, const Eigen::MatrixXi& cam_source)
-      : points_(points), normals_(normals), cam_source_(cam_source) { }
+    PointList(const Eigen::Matrix3Xd& points, const Eigen::Matrix3Xd& normals, const Eigen::MatrixXi& cam_source,
+      const Eigen::Matrix3Xd& view_points)
+      : points_(points), normals_(normals), cam_source_(cam_source), view_points_(view_points) { }
 
     PointList(int size, int num_cams);
 
     PointList sliceMatrix(const std::vector<int>& indices) const;
+
+    PointList createPermutation(const Eigen::Vector3i& order);
+
+    Eigen::Matrix3Xd sliceMatrix(const Eigen::Matrix3Xd& mat, const std::vector<int>& indices) const;
+
+    Eigen::MatrixXi sliceMatrix(const Eigen::MatrixXi& mat, const std::vector<int>& indices) const;
 
     const Eigen::MatrixXi& getCamSource() const
     {
@@ -87,16 +94,23 @@ class PointList
       return points_.cols();
     }
 
+    const Eigen::Matrix3Xd& getViewPoints() const
+    {
+      return view_points_;
+    }
+
+    void setViewPoints(const Eigen::Matrix3Xd& view_points)
+    {
+      view_points_ = view_points;
+    }
+
 
   private:
-
-    Eigen::Matrix3Xd sliceMatrix(const Eigen::Matrix3Xd& mat, const std::vector<int>& indices) const;
-
-    Eigen::MatrixXi sliceMatrix(const Eigen::MatrixXi& mat, const std::vector<int>& indices) const;
 
     Eigen::Matrix3Xd points_;
     Eigen::Matrix3Xd normals_;
     Eigen::MatrixXi cam_source_;
+    Eigen::Matrix3Xd view_points_;
 };
 
 

@@ -1,34 +1,12 @@
 #include <grasp_candidates_generator/grasp_hypothesis.h>
 
 
-GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& hand_frame,
+GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame,
   const FingerHand& finger_hand, const PointList& point_list_learning)
-    : sample_(sample), hand_frame_(hand_frame), half_antipodal_(false), full_antipodal_(false),
-      score_(0.0)
+: sample_(sample), hand_frame_(frame), half_antipodal_(false), full_antipodal_(false),
+  score_(0.0)
 {
-  approach_ = hand_frame.col(0);
-  binormal_ = hand_frame.col(1);
-  axis_ = hand_frame.col(2);
-
-  // finger positions and base/bottom and top/fingertip of grasp with respect to hand frame
-  left_ = finger_hand.getLeft();
-  right_ = finger_hand.getRight();
-  top_ = finger_hand.getTop();
-  bottom_ = finger_hand.getBottom();
-
-  // determine finger placement index that resulted in this grasp
-  const Eigen::Array<bool, 1, Eigen::Dynamic>& indices = finger_hand.getHand();
-  for (int i = 0; i < indices.size(); i++)
-  {
-    if (indices[i] == true)
-    {
-      finger_placement_index_ = i;
-      break;
-    }
-  }
-
-  // calculate grasp positions of hand middle on object surface, base/bottom and top with respect to base frame
-  calculateGraspPositions(finger_hand);
+  construct(frame, finger_hand);
 
   // calculate grasp width (hand opening width)
   grasp_width_ = point_list_learning.getPoints().row(0).maxCoeff() - point_list_learning.getPoints().row(0).minCoeff();
@@ -41,8 +19,14 @@ GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Mat
 
 GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame,
   const FingerHand& finger_hand)
-    : sample_(sample), hand_frame_(frame), grasp_width_(0.0), half_antipodal_(false), full_antipodal_(false),
-      score_(0.0)
+: sample_(sample), hand_frame_(frame), grasp_width_(0.0), half_antipodal_(false), full_antipodal_(false),
+  score_(0.0)
+{
+  construct(frame, finger_hand);
+}
+
+
+void GraspHypothesis::construct(const Eigen::Matrix3d& frame, const FingerHand& finger_hand)
 {
   approach_ = frame.col(0);
   binormal_ = frame.col(1);
@@ -53,6 +37,7 @@ GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Mat
   right_ = finger_hand.getRight();
   top_ = finger_hand.getTop();
   bottom_ = finger_hand.getBottom();
+  center_ = finger_hand.getCenter();
 
   // calculate grasp positions at the bottom/base and top of the hand and on the object surface
   calculateGraspPositions(finger_hand);
@@ -94,8 +79,8 @@ void GraspHypothesis::writeHandsToFile(const std::string& filename, const std::v
     print();
 
     myfile << vectorToString(hands[i].getGraspBottom()) << vectorToString(hands[i].getGraspSurface())
-        << vectorToString(hands[i].getAxis()) << vectorToString(hands[i].getApproach())
-        << vectorToString(hands[i].getBinormal()) << boost::lexical_cast<double>(hands[i].getGraspWidth()) << "\n";
+          << vectorToString(hands[i].getAxis()) << vectorToString(hands[i].getApproach())
+          << vectorToString(hands[i].getBinormal()) << boost::lexical_cast<double>(hands[i].getGraspWidth()) << "\n";
   }
 
   myfile.close();
@@ -104,16 +89,16 @@ void GraspHypothesis::writeHandsToFile(const std::string& filename, const std::v
 
 void GraspHypothesis::print()
 {
-	std::cout << "axis: " << axis_.transpose() << std::endl;
-	std::cout << "approach: " << approach_.transpose() << std::endl;
-	std::cout << "binormal: " << binormal_.transpose() << std::endl;
-	std::cout << "grasp width: " << grasp_width_ << std::endl;
-	std::cout << "grasp surface: " << grasp_surface_.transpose() << std::endl;
-	std::cout << "grasp bottom: " << grasp_bottom_.transpose() << std::endl;
-	std::cout << "grasp top: " << grasp_top_.transpose() << std::endl;
-	std::cout << "score: " << score_ << std::endl;
-	std::cout << "half-antipodal: " << half_antipodal_ << std::endl;
-	std::cout << "full-antipodal: " << full_antipodal_ << std::endl;
+  std::cout << "axis: " << axis_.transpose() << std::endl;
+  std::cout << "approach: " << approach_.transpose() << std::endl;
+  std::cout << "binormal: " << binormal_.transpose() << std::endl;
+  std::cout << "grasp width: " << grasp_width_ << std::endl;
+  std::cout << "grasp surface: " << grasp_surface_.transpose() << std::endl;
+  std::cout << "grasp bottom: " << grasp_bottom_.transpose() << std::endl;
+  std::cout << "grasp top: " << grasp_top_.transpose() << std::endl;
+  std::cout << "score: " << score_ << std::endl;
+  std::cout << "half-antipodal: " << half_antipodal_ << std::endl;
+  std::cout << "full-antipodal: " << full_antipodal_ << std::endl;
 }
 
 

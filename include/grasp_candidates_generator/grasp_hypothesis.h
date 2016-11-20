@@ -56,159 +56,161 @@
  * 
  * This class stores a single grasp hypothesis.
  * 
-*/
+ */
 class GraspHypothesis
 {
 public:
 
-	/**
-	 * \brief Default constructor.
-	*/
-	GraspHypothesis() : cam_source_(-1) {}
+  /**
+   * \brief Default constructor.
+   */
+  GraspHypothesis() : cam_source_(-1) {}
 
-	GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand,
-	  const PointList& point_list_learning);
+  GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand,
+    const PointList& point_list_learning);
 
-	GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand);
+  GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand);
 
-	void writeHandsToFile(const std::string& filename, const std::vector<GraspHypothesis>& hands);
+  void construct(const Eigen::Matrix3d& frame, const FingerHand& finger_hand);
 
-	/**
-	 * \brief Print a description of the grasp hypothesis to the systen's standard output.
-	*/
-	void print();
-	
-	/**
-	 * \brief Return the approach vector of the grasp.
-	 * \return 3x1 grasp approach vector
-	*/
-	const Eigen::Vector3d& getApproach() const
-	{
-		return approach_;
-	}
-	
-	/**
-	 * \brief Return the hand axis of the grasp.
-	 * \return 3x1 hand axis
-	*/
-	const Eigen::Vector3d& getAxis() const
-	{
-		return axis_;
-	}
-	
-	/**
-	 * \brief Return the binormal of the grasp.
-	 * \return 3x1 binormal
-	*/
-	const Eigen::Vector3d& getBinormal() const
-	{
-		return binormal_;
-	}
-	
-	/**
-	 * \brief Return whether the grasp is antipodal.
-	 * \return true if the grasp is antipodal, false otherwise
-	*/
-	bool isFullAntipodal() const
-	{
-		return full_antipodal_;
-	}
-	
-	/**
-	 * \brief Return the the centered grasp position at the base of the robot hand.
-	 * \return 3x1 grasp position at the base of the robot hand
-	*/
-	const Eigen::Vector3d& getGraspBottom() const
-	{
-		return grasp_bottom_;
-	}
+  void writeHandsToFile(const std::string& filename, const std::vector<GraspHypothesis>& hands);
 
-	/**
-	 * \brief Return the grasp position between the end of the finger tips projected onto the back of the hand.
-	 * \return 3x1 grasp position between the end of the finger tips projected onto the back of the hand
-	*/
-	const Eigen::Vector3d& getGraspSurface() const
-	{
-		return grasp_surface_;
-	}
-	
-	/**
-	 * \brief Return the width of the object contained in the grasp.
-	 * \return the width of the object contained in the grasp
-	*/
-	double getGraspWidth() const
-	{
-		return grasp_width_;
-	}
-	
-	/**
-	 * \brief Return whether the grasp is indeterminate.
-	 * \return true if the grasp is indeterminate, false otherwise
-	*/
-	bool isHalfAntipodal() const
-	{
-		return half_antipodal_;
-	}
+  /**
+   * \brief Print a description of the grasp hypothesis to the systen's standard output.
+   */
+  void print();
 
-	/**
-	 * \brief Return the points used for training/prediction by the SVM that belong to camera #2.
-	 * \return the list of points used for training/prediction by the SVM that belong to camera #2
-	*/
-	const Eigen::Matrix3Xd& getPointsForLearning() const
-	{
-		return points_for_learning_;
-	}
-	
-	/**
+  /**
+   * \brief Return the approach vector of the grasp.
+   * \return 3x1 grasp approach vector
+   */
+  const Eigen::Vector3d& getApproach() const
+  {
+    return approach_;
+  }
+
+  /**
+   * \brief Return the hand axis of the grasp.
+   * \return 3x1 hand axis
+   */
+  const Eigen::Vector3d& getAxis() const
+  {
+    return axis_;
+  }
+
+  /**
+   * \brief Return the binormal of the grasp.
+   * \return 3x1 binormal
+   */
+  const Eigen::Vector3d& getBinormal() const
+  {
+    return binormal_;
+  }
+
+  /**
+   * \brief Return whether the grasp is antipodal.
+   * \return true if the grasp is antipodal, false otherwise
+   */
+  bool isFullAntipodal() const
+  {
+    return full_antipodal_;
+  }
+
+  /**
+   * \brief Return the the centered grasp position at the base of the robot hand.
+   * \return 3x1 grasp position at the base of the robot hand
+   */
+  const Eigen::Vector3d& getGraspBottom() const
+  {
+    return grasp_bottom_;
+  }
+
+  /**
+   * \brief Return the grasp position between the end of the finger tips projected onto the back of the hand.
+   * \return 3x1 grasp position between the end of the finger tips projected onto the back of the hand
+   */
+  const Eigen::Vector3d& getGraspSurface() const
+  {
+    return grasp_surface_;
+  }
+
+  /**
+   * \brief Return the width of the object contained in the grasp.
+   * \return the width of the object contained in the grasp
+   */
+  double getGraspWidth() const
+  {
+    return grasp_width_;
+  }
+
+  /**
+   * \brief Return whether the grasp is indeterminate.
+   * \return true if the grasp is indeterminate, false otherwise
+   */
+  bool isHalfAntipodal() const
+  {
+    return half_antipodal_;
+  }
+
+  /**
+   * \brief Return the points used for training/prediction by the SVM that belong to camera #2.
+   * \return the list of points used for training/prediction by the SVM that belong to camera #2
+   */
+  const Eigen::Matrix3Xd& getPointsForLearning() const
+  {
+    return points_for_learning_;
+  }
+
+  /**
    * \brief Return the normals used for training/prediction by the SVM that belong to camera #2.
    * \return the list of normals used for training/prediction by the SVM that belong to camera #2
-  */
+   */
   const Eigen::Matrix3Xd& getNormalsForLearning() const
   {
     return normals_for_learning_;
   }
 
-	/**
-	 * \brief Return the camera source of the sample
-	 * \return the camera source of the sample
-	*/
-	int getCamSource() const
-	{
-		return cam_source_;
-	}
+  /**
+   * \brief Return the camera source of the sample
+   * \return the camera source of the sample
+   */
+  int getCamSource() const
+  {
+    return cam_source_;
+  }
 
-	/**
-	 * \brief Set whether the grasp is antipodal.
-	 * \param b whether the grasp is antipodal
-	*/
-	void setFullAntipodal(bool b)
-	{
-		full_antipodal_ = b;
-	}
-	
-	/**
-	 * \brief Set whether the grasp is indeterminate.
-	 * \param b whether the grasp is indeterminate
-	*/
-	void setHalfAntipodal(bool b)
-	{
-		half_antipodal_ = b;
-	}
-	
-	/**
-	 * \brief Set the width of the object contained in the grasp.
-	 * \param w the width of the object contained in the grasp
-	*/
-	void setGraspWidth(double w)
-	{
-		grasp_width_ = w;
-	}
+  /**
+   * \brief Set whether the grasp is antipodal.
+   * \param b whether the grasp is antipodal
+   */
+  void setFullAntipodal(bool b)
+  {
+    full_antipodal_ = b;
+  }
 
-	/**
-	* \brief Return the the centered grasp position between the fingertips of the robot hand.
-	* \return 3x1 grasp position between the fingertips
-	*/
-	const Eigen::Vector3d& getGraspTop() const
+  /**
+   * \brief Set whether the grasp is indeterminate.
+   * \param b whether the grasp is indeterminate
+   */
+  void setHalfAntipodal(bool b)
+  {
+    half_antipodal_ = b;
+  }
+
+  /**
+   * \brief Set the width of the object contained in the grasp.
+   * \param w the width of the object contained in the grasp
+   */
+  void setGraspWidth(double w)
+  {
+    grasp_width_ = w;
+  }
+
+  /**
+   * \brief Return the the centered grasp position between the fingertips of the robot hand.
+   * \return 3x1 grasp position between the fingertips
+   */
+  const Eigen::Vector3d& getGraspTop() const
   {
     return grasp_top_;
   }
@@ -263,6 +265,11 @@ public:
     binormal_ = binormal;
   }
 
+  double getCenter() const
+  {
+    return center_;
+  }
+
   double getBottom() const
   {
     return bottom_;
@@ -314,7 +321,7 @@ protected:
   Eigen::Matrix3Xd points_for_learning_; ///< the points used by the classifier
   Eigen::Matrix3Xd normals_for_learning_; ///< the normals used by the classifier
   Eigen::MatrixXi camera_source_for_learning_; ///< the camera source for each point used by the classifier
-  double left_, right_, top_, bottom_; // positions with respect to hand frame
+  double center_, left_, right_, top_, bottom_; // positions with respect to hand frame
   int finger_placement_index_; // index of the finger placement that resuled in this grasp
 };
 

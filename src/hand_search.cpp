@@ -91,7 +91,7 @@ std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera&
   std::vector<int> nn_indices;
   std::vector<float> nn_dists;
   Eigen::Matrix3Xd points = cloud->getMatrixXfMap().block(0, 0, 3, cloud->size()).cast<double>();
-  PointList point_list(points, cloud_normals, camera_source);
+  PointList point_list(points, cloud_normals, camera_source, cloud_cam.getViewPoints());
   PointList nn_points;
   std::vector<int> labels(grasps.size()); // -1: not feasible, 0: feasible, >0: see Antipodal class
 
@@ -189,7 +189,7 @@ std::vector<GraspHypothesis> HandSearch::evaluateHands(const CloudCamera& cloud_
   const PointCloudRGB::Ptr& cloud = cloud_cam.getCloudProcessed();
   Eigen::Matrix3Xd points = cloud->getMatrixXfMap().block(0, 0, 3, cloud->size()).cast<double>();
   std::vector< std::vector<GraspHypothesis> > hand_lists(frames.size(), std::vector<GraspHypothesis>(0));
-  PointList point_list(points, cloud_cam.getNormals(), cloud_cam.getCameraSource());
+  PointList point_list(points, cloud_cam.getNormals(), cloud_cam.getCameraSource(), cloud_cam.getViewPoints());
   PointList nn_points;
 
 #ifdef _OPENMP // parallelization using OpenMP
@@ -263,7 +263,7 @@ std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& s
     Eigen::Matrix3d frame_rot = local_frame_mat * rot_binormal * rot;
     Eigen::Matrix3Xd points_frame = frame_rot.transpose() * point_list.getPoints();
     Eigen::Matrix3Xd normals_frame = frame_rot.transpose() * point_list.getNormals();
-    PointList point_list_frame(points_frame, normals_frame, point_list.getCamSource());
+    PointList point_list_frame(points_frame, normals_frame, point_list.getCamSource(), point_list.getViewPoints());
 
     // crop points based on hand height
     PointList point_list_cropped = cropByHandHeight(point_list_frame, hand_height_);
@@ -308,7 +308,7 @@ bool HandSearch::reevaluateHypothesis(const PointList& point_list, const GraspHy
   const Eigen::Matrix3d& frame = hand.getHandFrame();
   Eigen::Matrix3Xd points_frame = frame.transpose() * point_list.getPoints();
   Eigen::Matrix3Xd normals_frame = frame.transpose() * point_list.getNormals();
-  PointList point_list_frame(points_frame, normals_frame, point_list.getCamSource());
+  PointList point_list_frame(points_frame, normals_frame, point_list.getCamSource(), point_list.getViewPoints());
   point_list_cropped = cropByHandHeight(point_list_frame, hand_height_);
 
   // evaluate finger location for this grasp
@@ -380,7 +380,7 @@ PointList HandSearch::cropByHandHeight(const PointList& points_in, double height
     cam_source_out.col(i) = points_in.getCamSource().col(indices[i]);
   }
 
-  return PointList(points_out, normals_out, cam_source_out);
+  return PointList(points_out, normals_out, cam_source_out, points_in.getViewPoints());
 }
 
 

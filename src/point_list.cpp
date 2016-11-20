@@ -14,8 +14,9 @@ PointList PointList::sliceMatrix(const std::vector<int>& indices) const
   Eigen::Matrix3Xd points_out = sliceMatrix(points_, indices);
   Eigen::Matrix3Xd normals_out = sliceMatrix(normals_, indices);
   Eigen::MatrixXi cam_source_out = sliceMatrix(cam_source_, indices);
+  Eigen::Matrix3Xd view_points_out = sliceMatrix(view_points_, indices);
 
-  return PointList(points_out, normals_out, cam_source_out);
+  return PointList(points_out, normals_out, cam_source_out, view_points_out);
 }
 
 
@@ -42,4 +43,19 @@ Eigen::MatrixXi PointList::sliceMatrix(const Eigen::MatrixXi& mat, const std::ve
   }
 
   return mat_out;
+}
+
+
+PointList PointList::createPermutation(const Eigen::Vector3i& order)
+{
+  Eigen::Matrix3Xd points_out(3, size());
+  Eigen::Matrix3Xd normals_out(3, size());
+
+  for (int i = 0; i < 3; i++)
+  {
+    points_out.row(i) = points_.row(order(i));
+    normals_out.row(i) = normals_.row(order(i));
+  }
+
+  return PointList(points_out, normals_out, cam_source_, view_points_);
 }

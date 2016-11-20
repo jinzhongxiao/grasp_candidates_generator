@@ -143,18 +143,11 @@ std::vector<int> FingerHand::computePointsInClosingRegion(const Eigen::Matrix3Xd
     std::cout << "ERROR: Something went wrong!\n";
   }
 
-//  std::cout << "  finger_spacing: " << finger_spacing_.transpose() << "\n";
-
   // calculate the lateral parameters of the closing region of the robot hand for this finger placement
   left_ = finger_spacing_(idx) + finger_width_;
   right_ = finger_spacing_(hand_.cols() + idx);
   center_ = 0.5 * (left_ + right_);
   surface_ = points.row(lateral_axis_).minCoeff();
-
-  //  std::cout << finger_spacing_.transpose() << "\n";
-//  std::cout << " left_: " << left_ << ", right_: " << right_ << "\n";
-//  std::cout << " center_: " << center_ << ", surface_: " << surface_ << "\n";
-//  std::cout << " bottom_: " << bottom_ << ", top_: " << top_ << "\n";
 
   // find points inside closing region defined by <bottom_>, <top_>, <left_> and <right_>
   std::vector<int> indices;
