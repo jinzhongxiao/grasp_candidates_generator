@@ -74,7 +74,7 @@ public:
      * \brief Compares two 3D-vectors for uniqueness.
      * \param a the first 3D-vector
      * \param b the second 3D-vector
-     * \return true if they have no equal elements, false otherwise
+     * \return true if they differ in at least one element, false if all elements are equal
     */
     bool operator ()(const Eigen::Vector3i& a, const Eigen::Vector3i& b)
     {
@@ -82,7 +82,7 @@ public:
       {
         if (a(i) != b(i))
         {
-          return a(i) < b(i);
+          return true;
         }
       }
 

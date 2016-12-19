@@ -99,6 +99,10 @@ void GraspHypothesis::print()
   std::cout << "score: " << score_ << std::endl;
   std::cout << "half-antipodal: " << half_antipodal_ << std::endl;
   std::cout << "full-antipodal: " << full_antipodal_ << std::endl;
+  std::cout << "finger_hand:\n";
+  std::cout << "  bottom: " << bottom_ << std::endl;
+  std::cout << "  center: " << center_ << std::endl;
+  std::cout << "  top: " << top_ << std::endl;
 }
 
 

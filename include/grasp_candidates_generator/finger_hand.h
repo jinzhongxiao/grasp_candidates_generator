@@ -209,6 +209,35 @@ public:
     lateral_axis_ = lateral_axis;
   }
 
+  void setBottom(double bottom)
+  {
+    bottom_ = bottom;
+  }
+
+  void setCenter(double center)
+  {
+    center_ = center;
+  }
+
+  void setLeft(double left)
+  {
+    left_ = left;
+  }
+
+  void setRight(double right)
+  {
+    right_ = right;
+  }
+
+  void setSurface(double surface)
+  {
+    surface_ = surface;
+  }
+
+  void setTop(double top)
+  {
+    top_ = top;
+  }
 
 private:
 
