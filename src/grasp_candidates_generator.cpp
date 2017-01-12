@@ -88,7 +88,6 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
   }
 
   // 4. Calculate surface normals.
-  std::cout << "cloud_cam.getNormals().cols(): " << cloud_cam.getNormals().cols() << "\n";
   if (cloud_cam.getNormals().cols() == 0)
   {
     std::cout << "Calculating surface normals with " << params_.num_threads_ << " CPU threads.\n";

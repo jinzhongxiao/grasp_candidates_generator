@@ -281,7 +281,6 @@ void CloudCamera::calculateNormals(int num_threads)
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals_omp(new pcl::PointCloud<pcl::Normal>);
   pcl::search::KdTree<pcl::PointXYZRGBA>::Ptr tree_ptr(new pcl::search::KdTree<pcl::PointXYZRGBA>);
   estimator.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
-//  std::cout << " view_point: " << view_point(0) << " " << view_point(1) << " " << view_point(2) << "\n";
   estimator.setInputCloud(cloud_processed_);
   estimator.setSearchMethod(tree_ptr);
   estimator.setRadiusSearch(0.03);
