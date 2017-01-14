@@ -46,23 +46,15 @@ Eigen::MatrixXi PointList::sliceMatrix(const Eigen::MatrixXi& mat, const std::ve
 }
 
 
-PointList PointList::createPermutation(const Eigen::Vector3i& order) const
+PointList PointList::transformToHandFrame(const Eigen::Vector3d& centroid, const Eigen::Matrix3d& rotation) const
 {
-  Eigen::Matrix3Xd points_out(3, size());
+  Eigen::Matrix3Xd points_centered = points_ - centroid.replicate(1, size());
 
-  for (int i = 0; i < 3; i++)
-  {
-    points_out.row(i) = points_.row(order(i));
-  }
-
-  return PointList(points_out, normals_, cam_source_, view_points_);
+  return PointList(rotation * points_centered, rotation * normals_, cam_source_, view_points_);
 }
 
 
-PointList PointList::transformToHandFrame(const Eigen::Vector3d& centroid, const Eigen::Matrix3d& rotation) const
+PointList PointList::rotatePointList(const Eigen::Matrix3d& rotation) const
 {
-  Eigen::Matrix3Xd points_frame = points_ - centroid.replicate(1, size());
-  points_frame = rotation * points_frame;
-  Eigen::Matrix3Xd normals_frame = rotation * normals_;
-  return PointList(points_frame, normals_frame, cam_source_, view_points_);
+  return PointList(rotation * points_, rotation * normals_, cam_source_, view_points_);
 }

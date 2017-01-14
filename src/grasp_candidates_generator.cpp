@@ -14,6 +14,12 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 
   std::cout << "Processing cloud with: " << cloud_cam.getCloudOriginal()->size() << " points.\n";
 
+  // Calculate surface normals using integral images if possible.
+  if (cloud_cam.getCloudOriginal()->isOrganized())
+  {
+    cloud_cam.calculateNormals(0);
+  }
+
   // perform statistical outlier removal
   if (params_.remove_statistical_outliers_)
   {
@@ -90,9 +96,12 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
   // 4. Calculate surface normals.
   if (cloud_cam.getNormals().cols() == 0)
   {
-    std::cout << "Calculating surface normals with " << params_.num_threads_ << " CPU threads.\n";
     cloud_cam.calculateNormals(params_.num_threads_);
-    std::cout << "  done\n";
+  }
+
+  if (params_.plot_normals_)
+  {
+    plotter_.plotNormals(cloud_cam.getCloudProcessed()->getMatrixXfMap().cast<double>(), cloud_cam.getNormals());
   }
 }
 

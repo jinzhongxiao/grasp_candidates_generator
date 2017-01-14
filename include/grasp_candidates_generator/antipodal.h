@@ -47,7 +47,7 @@
  *
  * \brief Check if a grasp is antipodal
  * 
- * This class checks if a grasp satifies the antipodal condition.
+ * This class checks if a grasp candidate satifies the antipodal condition.
  * 
 */
 class Antipodal
@@ -55,9 +55,9 @@ class Antipodal
 public:
 
   int evaluateGrasp(const PointList& point_list, double extremal_thresh, int lateral_axis = 0, int forward_axis = 1,
-    int vertical_axis = 2);
+    int vertical_axis = 2) const;
 
-  int evaluateGrasp(const Eigen::Matrix3Xd& normals, double thresh_half, double thresh_full);
+  int evaluateGrasp(const Eigen::Matrix3Xd& normals, double thresh_half, double thresh_full) const;
 
   static const int NO_GRASP; // normals point not toward any finger
   static const int HALF_GRASP; // normals point towards one finger

@@ -22,8 +22,6 @@ void LocalFrame::findAverageNormalAxis(const Eigen::MatrixXd &normals)
   int min_index;
   eigen_values.minCoeff(&min_index);
   curvature_axis_ = eigen_vectors.col(min_index);
-//  std::cout << "eigenvalues(M):\n" << eigen_values.transpose() << "eigenvectors(M):\n" << "\n" << eigen_vectors << "\n";
-//  std::cout << "eigenvalues(M):\n" << eigen_solver.eigenvalues() << "eigenvectors(M):\n" << "\n" << eigen_solver.eigenvectors() << "\n";
 
   // 2. Calculate surface normal (corresponds to major principal curvature axis).
   int max_index;
@@ -33,7 +31,6 @@ void LocalFrame::findAverageNormalAxis(const Eigen::MatrixXd &normals)
   // 3. Ensure that the new normal is pointing in the same direction as the existing normals.
   Eigen::Vector3d avg_normal = normals.rowwise().sum();
   avg_normal /= avg_normal.norm();
-//  std::cout << "avg_normal: " << avg_normal << "\n";
   if (avg_normal.transpose() * normal_ < 0)
   {
     normal_ *= -1.0;

@@ -41,6 +41,7 @@
 
 #include <Eigen/Dense>
 
+#include <pcl/features/integral_image_normal.h>
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/filters/random_sample.h>
 #include <pcl/search/kdtree.h>
@@ -90,19 +91,41 @@ public:
     }
   };
 
+  struct UniqueVectorFirstThreeElementsComparator
+  {
+    /**
+     * \brief Compares two 3D-vectors for uniqueness (ignores the last element).
+     * \param a the first 3D-vector
+     * \param b the second 3D-vector
+     * \return true if they differ in at least one element, false if all elements are equal
+    */
+    bool operator ()(const Eigen::Vector4i& a, const Eigen::Vector4i& b)
+    {
+      for (int i = 0; i < a.size() - 1; i++)
+      {
+        if (a(i) != b(i))
+        {
+          return true;
+        }
+      }
+
+      return false;
+    }
+  };
+
   CloudCamera();
 
   CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);
 
   CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);
 
-  CloudCamera(const std::string& filename);
+  CloudCamera(const std::string& filename, const Eigen::Matrix3Xd& view_points);
 
-  CloudCamera(const std::string& filename_left, const std::string& filename_right);
+  CloudCamera(const std::string& filename_left, const std::string& filename_right,
+    const Eigen::Matrix3Xd& view_points);
 
   /**
-   * \brief Filter out points in the point cloud that lie outside the workspace dimensions and keep
-   * track of the camera source for each point that is not filtered out.
+   * \brief Filter out points in the point cloud that lie outside the workspace dimensions.
    * \param[in] workspace a 6-D vector containing the workspace limits: [minX, maxX, minY, maxY, minZ, maxZ]
   */
   void filterWorkspace(const std::vector<double>& workspace);
@@ -184,14 +207,14 @@ public:
 
 private:
 
-  PointCloudRGB::Ptr loadPointCloudFromFile(const std::string& filename);
+  PointCloudRGB::Ptr loadPointCloudFromFile(const std::string& filename) const;
 
   /**
    * \brief Round a 3D-vector down to the closest, smaller integers.
    * \param a the 3D-vector to be rounded down
    * \return the rounded down 3D-vector
   */
-  Eigen::Vector3i floorVector(const Eigen::Vector3f& a);
+  Eigen::Vector3i floorVector(const Eigen::Vector3f& a) const;
 
   PointCloudRGB::Ptr cloud_processed_; ///< the (processed) point cloud
   PointCloudRGB::Ptr cloud_original_; ///< the original point cloud

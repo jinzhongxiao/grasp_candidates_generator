@@ -9,7 +9,7 @@
 class Convert
 {
   public:
-    // Convert T, which should be a primitive, to a std::string.
+    // Convert T, which should be a primitive, to string.
     template <typename T>
     static std::string T_to_string(T const &val)
     {
@@ -19,7 +19,7 @@ class Convert
       return ostr.str();
     }
 
-    // Convert a std::string to T.
+    // Convert string to T.
     template <typename T>
     static T string_to_T(std::string const &val)
     {
@@ -30,12 +30,6 @@ class Convert
 
       return returnVal;
     }
-
-//    template <typename T>
-//    static std::string string_to_T(std::string const &val)
-//    {
-//      return val;
-//    }
 };
 
 
@@ -43,7 +37,7 @@ class ConfigFile
 {
   private:
 
-    // Remove comment from a single line.
+    // Remove comment from single line.
     void removeComment(std::string &line) const
     {
       if (line.find('#') != line.npos)
@@ -86,7 +80,6 @@ class ConfigFile
     void extractContents(const std::string &line)
     {
       std::string temp = line;
-      // Erase leading whitespace from the line.
       temp.erase(0, temp.find_first_not_of("\t "));
       size_t sepPos = temp.find('=');
 
@@ -100,8 +93,6 @@ class ConfigFile
         std::cout << "CFG: Can only have unique key names!\n";
     }
 
-    // lineNo = the current line number in the file.
-    // line = the current line, with comments removed.
     void parseLine(const std::string &line, size_t const lineNo)
     {
       if (line.find('=') == line.npos)
@@ -118,7 +109,7 @@ class ConfigFile
       std::ifstream file;
       file.open(fName.c_str());
       if (!file)
-        std::cout << "CFG: File " + fName + " couldn't be found!\n";
+        std::cout << "Config file " + fName + " could not be found!\n";
 
       std::string line;
       size_t lineNo = 0;
@@ -151,13 +142,11 @@ class ConfigFile
       ExtractKeys();
     }
 
-    // Check if a given key exists in the configuration file.
     bool keyExists(const std::string &key) const
     {
       return contents.find(key) != contents.end();
     }
 
-    // Retrieve the value of a given key.
     template <typename ValueType>
     ValueType getValueOfKey(const std::string &key, ValueType const &defaultValue = ValueType()) const
     {

@@ -55,7 +55,7 @@ class Plot
 	public:
 
     void plotFingers(const std::vector<GraspHypothesis>& hand_list, const PointCloudRGBA::Ptr& cloud, std::string str,
-      double outer_diameter = 0.09);
+      double outer_diameter = 0.09) const;
 		
 		/**
 		 * \brief Plot a set of grasp hypotheses.
@@ -65,7 +65,7 @@ class Plot
 		 * \param use_grasp_bottom whether the grasps plotted originate from the grasp bottom point
 		*/
 		void plotHands(const std::vector<GraspHypothesis>& hand_list, const PointCloudRGBA::Ptr& cloud, std::string str,
-			bool use_grasp_bottom = false);
+			bool use_grasp_bottom = false) const;
 		
 		/** 
 		 * \brief Plot a set of grasp hypotheses and a set of antipodal grasps.
@@ -77,43 +77,43 @@ class Plot
 		*/ 
 		void plotHands(const std::vector<GraspHypothesis>& hand_list,
 			const std::vector<GraspHypothesis>& antipodal_hand_list, const PointCloudRGBA::Ptr& cloud, std::string str,
-			bool use_grasp_bottom = false);
+			bool use_grasp_bottom = false) const;
 		
 		/** 
 		 * \brief Plot a set of samples.
 		 * \param index_list the list of samples (indices into the point cloud)
 		 * \param cloud the point cloud to be plotted
 		*/
-		void plotSamples(const std::vector<int>& index_list, const PointCloudRGBA::Ptr& cloud);
+		void plotSamples(const std::vector<int>& index_list, const PointCloudRGBA::Ptr& cloud) const;
 
-		void plotSamples(const Eigen::Matrix3Xd& samples, const PointCloudRGBA::Ptr& cloud);
+		void plotSamples(const Eigen::Matrix3Xd& samples, const PointCloudRGBA::Ptr& cloud) const;
     
-    void plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointCloudRGBA::Ptr& cloud);
+    void plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointCloudRGBA::Ptr& cloud) const;
     
     /** 
 		 * \brief Plot a set of normals.
 		 * \param cloud the point cloud to be plotted
      * \param normals the normals to be plotted
 		*/
-    void plotNormals(const PointCloudRGBA::Ptr& cloud, const Eigen::Matrix3Xd& normals);
+    void plotNormals(const PointCloudRGBA::Ptr& cloud, const Eigen::Matrix3Xd& normals) const;
 
-    void plotNormals(const Eigen::Matrix3Xd& pts, const Eigen::Matrix3Xd& normals);
+    void plotNormals(const Eigen::Matrix3Xd& pts, const Eigen::Matrix3Xd& normals) const;
 		
 		/** 
 		 * \brief Plot a set of quadrics by plotting their local axes.
 		 * \param quadric_list the list of quadrics to be plotted
 		 * \param cloud the point cloud to be plotted
 		*/
-		void plotLocalAxes(const std::vector<LocalFrame>& quadric_list, const PointCloudRGBA::Ptr& cloud);
+		void plotLocalAxes(const std::vector<LocalFrame>& quadric_list, const PointCloudRGBA::Ptr& cloud) const;
 		
 		/** 
 		 * \brief Plot the camera source for each point in the point cloud.
 		 * \param pts_cam_source_in the camera source for each point in the point cloud
 		 * \param cloud the point cloud to be plotted
 		*/
-		void plotCameraSource(const Eigen::VectorXi& pts_cam_source_in, const PointCloudRGBA::Ptr& cloud);
+		void plotCameraSource(const Eigen::VectorXi& pts_cam_source_in, const PointCloudRGBA::Ptr& cloud) const;
 		
-		void drawCloud(const PointCloudRGBA::Ptr& cloud_rgb, const std::string& title);
+		void drawCloud(const PointCloudRGBA::Ptr& cloud_rgb, const std::string& title) const;
 
 
 	private:
@@ -128,13 +128,13 @@ class Plot
 		 * bottom point 
 		*/
 		PointCloudNormal::Ptr createNormalsCloud(const std::vector<GraspHypothesis>& hand_list,
-			bool plots_only_antipodal, bool plots_grasp_bottom);
+			bool plots_only_antipodal, bool plots_grasp_bottom) const;
 		
-		PointCloudRGBA::Ptr createFingersCloud(const std::vector<GraspHypothesis>& hand_list, double outer_diameter);
+		PointCloudRGBA::Ptr createFingersCloud(const std::vector<GraspHypothesis>& hand_list, double outer_diameter) const;
 
-		pcl::PointXYZRGBA eigenVector3dToPointXYZRGBA(const Eigen::Vector3d& v);
+		pcl::PointXYZRGBA eigenVector3dToPointXYZRGBA(const Eigen::Vector3d& v) const;
 
-		void setPointColor(const GraspHypothesis& hand, pcl::PointXYZRGBA& p);
+		void setPointColor(const GraspHypothesis& hand, pcl::PointXYZRGBA& p) const;
 
 		/** 
 		 * \brief Add a point cloud with normals to a PCL visualizer.
@@ -148,7 +148,7 @@ class Plot
 		*/
 		void addCloudNormalsToViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewer,
 			const PointCloudNormal::Ptr& cloud, double line_width, double* color_cloud, double* color_normals,
-			const std::string& cloud_name, const std::string& normals_name);
+			const std::string& cloud_name, const std::string& normals_name) const;
 		
 		/** 
 		 * \brief Plot two point clouds representing grasp hypotheses and antipodal grasps, 
@@ -160,19 +160,19 @@ class Plot
 		 * \param use_grasp_bottom whether the grasps plotted originate from the grasp bottom point
 		*/
 		void plotHandsHelper(const PointCloudNormal::Ptr& hands_cloud, const PointCloudNormal::Ptr& antipodal_hands_cloud, 
-			const PointCloudRGBA::Ptr& cloud,	std::string str, bool use_grasp_bottom);
+			const PointCloudRGBA::Ptr& cloud,	std::string str, bool use_grasp_bottom) const;
 		
 		/** 
 		 * \brief Run/show a PCL visualizer until an escape key is hit.
 		 * \param viewer the PCL visualizer to be shown
 		*/
-		void runViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewer);
+		void runViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewer) const;
 		
 		/** 
 		 * \brief Create a PCL visualizer.
 		 * \param title the title of the visualization window
 		*/
-		boost::shared_ptr<pcl::visualization::PCLVisualizer> createViewer(std::string title);
+		boost::shared_ptr<pcl::visualization::PCLVisualizer> createViewer(std::string title) const;
 
 		double marker_lifetime_; ///< max time that markers are visualized in Rviz
 };

@@ -37,8 +37,6 @@ void FingerHand::evaluateFingers(const Eigen::Matrix3Xd& points, double bite, in
       // collide with <points>.
       if (points(forward_axis_, i) < bottom_)
       {
-//        std::cout << "back of hand collides with points!\n";
-//        std::cout << "  bottom: " << bottom_ << ", top: " << top_ << "\n";
         return;
       }
     }

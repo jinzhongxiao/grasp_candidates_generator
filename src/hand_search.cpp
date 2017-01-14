@@ -7,41 +7,44 @@ const int HandSearch::ROTATION_AXIS_CURVATURE_AXIS = 2;
 
 
 std::vector<GraspHypothesis> HandSearch::generateHypotheses(const CloudCamera& cloud_cam, int antipodal_mode,
-  bool use_samples, bool forces_PSD, bool plots_normals, bool plots_samples)
+  bool use_samples, bool forces_PSD, bool plots_normals, bool plots_samples) const
 {
   if (rotation_axis_ < 0 || rotation_axis_ > 2)
   {
-    std::cout << "Parameter <rotation_axis> is not set!\n";
+    std::cout << "Parameter <rotation_axis> is not set correctly!\n";
     std::vector<GraspHypothesis> empty(0);
     return empty;
   }
 
   double t0_total = omp_get_wtime();
 
-  // create KdTree for neighborhood search
+  // Create KdTree for neighborhood search.
   const PointCloudRGB::Ptr& cloud = cloud_cam.getCloudProcessed();
   pcl::KdTreeFLANN<pcl::PointXYZRGBA> kdtree;
   kdtree.setInputCloud(cloud);
 
-  cloud_normals_.resize(3, cloud->size());
-  cloud_normals_.setZero(3, cloud->size());
-
-  // 1. Calculate surface normals for all points (optional).
-  bool has_normals = false;
-  cloud_normals_ = cloud_cam.getNormals();
+  // Plot normals and/or samples if desired.
   if (plots_normals)
   {
     std::cout << "Plotting normals ...\n";
-    plot_.plotNormals(cloud, cloud_normals_);
+    plot_.plotNormals(cloud_cam.getNormals(), cloud_normals_);
   }
 
   if (plots_samples)
   {
-    std::cout << "Plotting samples ...\n";
-    plot_.plotSamples(cloud_cam.getSampleIndices(), cloud_cam.getCloudProcessed());
+    if (cloud_cam.getSampleIndices().size() > 0)
+    {
+      std::cout << "Plotting sample indices ...\n";
+      plot_.plotSamples(cloud_cam.getSampleIndices(), cloud_cam.getCloudProcessed());
+    }
+    else if (cloud_cam.getSamples().cols() > 0)
+    {
+      std::cout << "Plotting samples ...\n";
+      plot_.plotSamples(cloud_cam.getSamples(), cloud_cam.getCloudProcessed());
+    }
   }
 
-  // 2. Estimate local reference frames.
+  // 1. Estimate local reference frames.
   std::cout << "Estimating local reference frames ...\n";
   std::vector<LocalFrame> frames;
   FrameEstimator frame_estimator(num_threads_);
@@ -52,7 +55,7 @@ std::vector<GraspHypothesis> HandSearch::generateHypotheses(const CloudCamera& c
   if (plots_local_axes_)
     plot_.plotLocalAxes(frames, cloud_cam.getCloudOriginal());
 
-  // 3. Evaluate possible hand placements.
+  // 2. Evaluate possible hand placements.
   std::cout << "Finding hand poses ...\n";
   std::vector<GraspHypothesis> hypotheses = evaluateHands(cloud_cam, frames, kdtree);
 
@@ -63,7 +66,7 @@ std::vector<GraspHypothesis> HandSearch::generateHypotheses(const CloudCamera& c
 
 
 std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera& cloud_cam,
-  const std::vector<GraspHypothesis>& grasps, bool plot_samples)
+  const std::vector<GraspHypothesis>& grasps, bool plot_samples) const
 {
   // calculate radius for points in closing region of robot hand
   Eigen::Vector3d radius_options;
@@ -102,7 +105,6 @@ std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera&
   {
     labels[i] = 0;
     pcl::PointXYZRGBA sample = eigenVectorToPcl(grasps[i].getSample());
-//    std::cout << i << ", sample: " << grasps[i].getSample().transpose() << "\n";
 
     if (kdtree.radiusSearch(sample, radius, nn_indices, nn_dists) > 0)
     {
@@ -141,7 +143,7 @@ std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera&
 }
 
 
-pcl::PointXYZRGBA HandSearch::eigenVectorToPcl(const Eigen::Vector3d& v)
+pcl::PointXYZRGBA HandSearch::eigenVectorToPcl(const Eigen::Vector3d& v) const
 {
   pcl::PointXYZRGBA p;
   p.x = v(0);
@@ -171,7 +173,7 @@ void HandSearch::setParameters(const Parameters& params)
 
 
 std::vector<GraspHypothesis> HandSearch::evaluateHands(const CloudCamera& cloud_cam,
-  const std::vector<LocalFrame>& frames, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree)
+  const std::vector<LocalFrame>& frames, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const
 {
   double t1 = omp_get_wtime();
 
@@ -181,8 +183,8 @@ std::vector<GraspHypothesis> HandSearch::evaluateHands(const CloudCamera& cloud_
   double radius = radius_options.maxCoeff();
 
   // possible angles used for hand orientations
-  Eigen::VectorXd angles0 = Eigen::VectorXd::LinSpaced(num_orientations_ + 1, -1.0 * M_PI/2.0, M_PI/2.0);
-  Eigen::VectorXd angles = angles0.block(0, 0, num_orientations_, 1);
+  Eigen::VectorXd angles = Eigen::VectorXd::LinSpaced(num_orientations_ + 1, -1.0 * M_PI/2.0, M_PI/2.0);
+  angles = angles.block(0, 0, num_orientations_, 1);
 
   std::vector<int> nn_indices;
   std::vector<float> nn_dists;
@@ -226,7 +228,7 @@ std::vector<GraspHypothesis> HandSearch::evaluateHands(const CloudCamera& cloud_
 
 
 std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& sample, const PointList& point_list,
-  const LocalFrame& local_frame, const Eigen::VectorXd& angles)
+  const LocalFrame& local_frame, const Eigen::VectorXd& angles) const
 {
   FingerHand finger_hand(finger_width_, hand_outer_diameter_, hand_depth_);
 
@@ -247,8 +249,6 @@ std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& s
   Eigen::Matrix3d local_frame_mat;
   local_frame_mat << local_frame.getNormal(), local_frame.getBinormal(), local_frame.getCurvatureAxis();
 
-//  std::cout << "local_frame_mat:\n" << local_frame_mat << "\n";
-
   // evaluate grasp at each hand orientation
   std::vector<GraspHypothesis> hand_list;
   for (int i = 0; i < angles.rows(); i++)
@@ -261,9 +261,7 @@ std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& s
 
     // rotate points into this hand orientation
     Eigen::Matrix3d frame_rot = local_frame_mat * rot_binormal * rot;
-    Eigen::Matrix3Xd points_frame = frame_rot.transpose() * point_list.getPoints();
-    Eigen::Matrix3Xd normals_frame = frame_rot.transpose() * point_list.getNormals();
-    PointList point_list_frame(points_frame, normals_frame, point_list.getCamSource(), point_list.getViewPoints());
+    PointList point_list_frame = point_list.rotatePointList(frame_rot.transpose());
 
     // crop points based on hand height
     PointList point_list_cropped = cropByHandHeight(point_list_frame, hand_height_);
@@ -285,8 +283,6 @@ std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& s
         std::vector<int> indices_learning = finger_hand.computePointsInClosingRegion(point_list_cropped.getPoints());
         if (indices_learning.size() == 0)
         {
-//          std::cout << "#point_list_cropped: " << point_list_cropped.size() << ", #indices_learning: "
-//            << indices_learning.size() << "\n";
           continue;
         }
 
@@ -302,19 +298,16 @@ std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& s
 
 
 bool HandSearch::reevaluateHypothesis(const PointList& point_list, const GraspHypothesis& hand,
-  FingerHand& finger_hand, PointList& point_list_cropped)
+  FingerHand& finger_hand, PointList& point_list_cropped) const
 {
-  // transform points into hand frame and crop them on <hand_height>
-  const Eigen::Matrix3d& frame = hand.getHandFrame();
-  Eigen::Matrix3Xd points_frame = frame.transpose() * point_list.getPoints();
-  Eigen::Matrix3Xd normals_frame = frame.transpose() * point_list.getNormals();
-  PointList point_list_frame(points_frame, normals_frame, point_list.getCamSource(), point_list.getViewPoints());
+  // Transform points into hand frame and crop them on <hand_height>.
+  PointList point_list_frame = point_list.rotatePointList(hand.getFrame().transpose());
   point_list_cropped = cropByHandHeight(point_list_frame, hand_height_);
 
-  // evaluate finger location for this grasp
+  // Evaluate finger location for this grasp.
   finger_hand.evaluateFingers(point_list_cropped.getPoints(), hand.getTop(), hand.getFingerPlacementIndex());
 
-  // check that the finger placement is feasible
+  // Check that the finger placement is possible.
   if (finger_hand.getFingers().cast<int>().sum() >= 2)
   {
     finger_hand.evaluateHand(hand.getFingerPlacementIndex());
@@ -329,13 +322,11 @@ bool HandSearch::reevaluateHypothesis(const PointList& point_list, const GraspHy
 }
 
 
-int HandSearch::labelHypothesis(const PointList& point_list, FingerHand& finger_hand)
+int HandSearch::labelHypothesis(const PointList& point_list, FingerHand& finger_hand) const
 {
   std::vector<int> indices_learning = finger_hand.computePointsInClosingRegion(point_list.getPoints());
   if (indices_learning.size() == 0)
   {
-//    std::cout << "#pts_rot: " << point_list.getPoints().size() << ", #indices_learning: " << indices_learning.size()
-//      << "\n";
     return Antipodal::NO_GRASP;
   }
 
@@ -348,16 +339,14 @@ int HandSearch::labelHypothesis(const PointList& point_list, FingerHand& finger_
 
   // evaluate if the grasp is antipodal
   Antipodal antipodal;
-  //      std::cout << " points_in_box: " << points_learning.cols() << " normals_in_box: " << normals_in_box.cols() << std::endl;
   int antipodal_result = antipodal.evaluateGrasp(point_list_learning, 0.003, finger_hand.getLateralAxis(),
-    finger_hand.getForwardAxis(), rotation_axis_);
-  //      std::cout << " antipodal_result: " << antipodal_result << std::endl;
+  finger_hand.getForwardAxis(), rotation_axis_);
 
   return antipodal_result;
 }
 
 
-PointList HandSearch::cropByHandHeight(const PointList& points_in, double height, int dim)
+PointList HandSearch::cropByHandHeight(const PointList& points_in, double height, int dim) const
 {
   std::vector<int> indices(points_in.size());
   int k = 0;
@@ -385,7 +374,7 @@ PointList HandSearch::cropByHandHeight(const PointList& points_in, double height
 
 
 GraspHypothesis HandSearch::createGraspHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
-  const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand)
+  const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const
 {
   // extract data for classification
   PointList point_list_learning = point_list.sliceMatrix(indices_learning);
@@ -400,31 +389,4 @@ GraspHypothesis HandSearch::createGraspHypothesis(const Eigen::Vector3d& sample,
   hand.setFullAntipodal(antipodal_result == Antipodal::FULL_GRASP);
 
   return hand;
-}
-
-
-void HandSearch::cropPointsAndNormals(const Eigen::Matrix3Xd& points, const Eigen::Matrix3Xd& normals,
-  const Eigen::MatrixXi& cam_source, double height, Eigen::Matrix3Xd& points_out, Eigen::Matrix3Xd& normals_out,
-  Eigen::MatrixXi& cam_source_out)
-{
-  std::vector<int> indices(points.cols());
-  int k = 0;
-  for (int i = 0; i < points.cols(); i++)
-  {
-    if (points(2, i) > -1.0 * height && points(2, i) < height)
-    {
-      indices[k] = i;
-      k++;
-    }
-  }
-
-  points_out.resize(3, k);
-  normals_out.resize(3, k);
-  cam_source_out.resize(cam_source.rows(), k);
-  for (int i = 0; i < k; i++)
-  {
-    points_out.col(i) = points.col(indices[i]);
-    normals_out.col(i) = normals.col(indices[i]);
-    cam_source_out.col(i) = cam_source.col(indices[i]);
-  }
 }

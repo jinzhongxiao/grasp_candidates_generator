@@ -25,6 +25,7 @@ class GraspCandidatesGenerator
 
     struct Parameters
     {
+      bool plot_normals_;
       bool plot_grasps_;
       bool remove_statistical_outliers_;
       bool voxelize_;

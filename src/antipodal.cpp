@@ -6,7 +6,7 @@ const int Antipodal::FULL_GRASP = 2; // normals point towards both fingers
 
 
 int Antipodal::evaluateGrasp(const PointList& point_list, double extremal_thresh, int lateral_axis, int forward_axis,
-  int vertical_axis)
+  int vertical_axis) const
 {
   
 //  double friction_coeff = 20.0; // angle of friction cone in degrees
@@ -108,7 +108,7 @@ int Antipodal::evaluateGrasp(const PointList& point_list, double extremal_thresh
 }
 
 
-int Antipodal::evaluateGrasp(const Eigen::Matrix3Xd& normals, double thresh_half, double thresh_full)
+int Antipodal::evaluateGrasp(const Eigen::Matrix3Xd& normals, double thresh_half, double thresh_full) const
 {
   int num_thresh = 6;
   int grasp = 0;

@@ -2,7 +2,7 @@
 
 
 void Plot::plotFingers(const std::vector<GraspHypothesis>& hand_list, const PointCloudRGBA::Ptr& cloud,
-  std::string str, double outer_diameter)
+  std::string str, double outer_diameter) const
 {
   const int WIDTH = pcl::visualization::PCL_VISUALIZER_LINE_WIDTH;
 
@@ -23,7 +23,8 @@ void Plot::plotFingers(const std::vector<GraspHypothesis>& hand_list, const Poin
 }
 
 
-PointCloudRGBA::Ptr Plot::createFingersCloud(const std::vector<GraspHypothesis>& hand_list, double outer_diameter)
+PointCloudRGBA::Ptr Plot::createFingersCloud(const std::vector<GraspHypothesis>& hand_list,
+  double outer_diameter) const
 {
   PointCloudRGBA::Ptr cloud_fingers(new PointCloudRGBA);
 
@@ -85,7 +86,7 @@ PointCloudRGBA::Ptr Plot::createFingersCloud(const std::vector<GraspHypothesis>&
 
 void Plot::plotHands(const std::vector<GraspHypothesis>& hand_list,
   const std::vector<GraspHypothesis>& antipodal_hand_list, const PointCloudRGBA::Ptr& cloud, std::string str,
-  bool use_grasp_bottom)
+  bool use_grasp_bottom) const
 {
   PointCloudNormal::Ptr hands_cloud = createNormalsCloud(hand_list, false, false);
   PointCloudNormal::Ptr antipodal_hands_cloud = createNormalsCloud(antipodal_hand_list, true,
@@ -95,7 +96,7 @@ void Plot::plotHands(const std::vector<GraspHypothesis>& hand_list,
 
 
 void Plot::plotHands(const std::vector<GraspHypothesis>& hand_list, const PointCloudRGBA::Ptr& cloud,
-  std::string str, bool use_grasp_bottom)
+  std::string str, bool use_grasp_bottom) const
 {
   PointCloudNormal::Ptr hands_cloud = createNormalsCloud(hand_list, false, false);
   PointCloudNormal::Ptr antipodal_hands_cloud = createNormalsCloud(hand_list, true, false);
@@ -103,7 +104,7 @@ void Plot::plotHands(const std::vector<GraspHypothesis>& hand_list, const PointC
 }
 
 
-void Plot::plotSamples(const std::vector<int>& index_list, const PointCloudRGBA::Ptr& cloud)
+void Plot::plotSamples(const std::vector<int>& index_list, const PointCloudRGBA::Ptr& cloud) const
 {
   PointCloudRGBA::Ptr samples_cloud(new PointCloudRGBA);
   for (int i = 0; i < index_list.size(); i++)
@@ -113,7 +114,7 @@ void Plot::plotSamples(const std::vector<int>& index_list, const PointCloudRGBA:
 }
 
 
-void Plot::plotSamples(const Eigen::Matrix3Xd& samples, const PointCloudRGBA::Ptr& cloud)
+void Plot::plotSamples(const Eigen::Matrix3Xd& samples, const PointCloudRGBA::Ptr& cloud) const
 {
   PointCloudRGBA::Ptr samples_cloud(new PointCloudRGBA);
   for (int i = 0; i < samples.cols(); i++)
@@ -129,7 +130,7 @@ void Plot::plotSamples(const Eigen::Matrix3Xd& samples, const PointCloudRGBA::Pt
 }
 
 
-void Plot::plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointCloudRGBA::Ptr& cloud)
+void Plot::plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointCloudRGBA::Ptr& cloud) const
 {
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer("Samples");
 
@@ -147,7 +148,7 @@ void Plot::plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointClou
 }
 
 
-void Plot::plotNormals(const PointCloudRGBA::Ptr& cloud, const Eigen::Matrix3Xd& normals)
+void Plot::plotNormals(const PointCloudRGBA::Ptr& cloud, const Eigen::Matrix3Xd& normals) const
 {		
   PointCloudNormal::Ptr normals_cloud(new PointCloudNormal);
   for (int i=0; i < normals.cols(); i++)
@@ -172,7 +173,7 @@ void Plot::plotNormals(const PointCloudRGBA::Ptr& cloud, const Eigen::Matrix3Xd&
 }
 
 
-void Plot::plotNormals(const Eigen::Matrix3Xd& pts, const Eigen::Matrix3Xd& normals)
+void Plot::plotNormals(const Eigen::Matrix3Xd& pts, const Eigen::Matrix3Xd& normals) const
 {
   PointCloudNormal::Ptr normals_cloud(new PointCloudNormal);
   for (int i=0; i < normals.cols(); i++)
@@ -197,7 +198,7 @@ void Plot::plotNormals(const Eigen::Matrix3Xd& pts, const Eigen::Matrix3Xd& norm
 }
 
 
-void Plot::plotLocalAxes(const std::vector<LocalFrame>& quadric_list, const PointCloudRGBA::Ptr& cloud)
+void Plot::plotLocalAxes(const std::vector<LocalFrame>& quadric_list, const PointCloudRGBA::Ptr& cloud) const
 {
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer("Local Axes");
   viewer->addPointCloud<pcl::PointXYZRGBA>(cloud, "registered point cloud");
@@ -211,7 +212,7 @@ void Plot::plotLocalAxes(const std::vector<LocalFrame>& quadric_list, const Poin
 }
 
 
-void Plot::plotCameraSource(const Eigen::VectorXi& pts_cam_source_in, const PointCloudRGBA::Ptr& cloud)
+void Plot::plotCameraSource(const Eigen::VectorXi& pts_cam_source_in, const PointCloudRGBA::Ptr& cloud) const
 {
   PointCloudRGBA::Ptr left_cloud(new PointCloudRGBA);
   PointCloudRGBA::Ptr right_cloud(new PointCloudRGBA);
@@ -240,7 +241,7 @@ void Plot::plotCameraSource(const Eigen::VectorXi& pts_cam_source_in, const Poin
 
 
 PointCloudNormal::Ptr Plot::createNormalsCloud(const std::vector<GraspHypothesis>& hand_list,
-  bool plots_only_antipodal, bool plots_grasp_bottom)
+  bool plots_only_antipodal, bool plots_grasp_bottom) const
 {
   PointCloudNormal::Ptr cloud(new PointCloudNormal);
 
@@ -278,7 +279,7 @@ PointCloudNormal::Ptr Plot::createNormalsCloud(const std::vector<GraspHypothesis
 
 void Plot::addCloudNormalsToViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewer,
   const PointCloudNormal::Ptr& cloud, double line_width, double* color_cloud,
-  double* color_normals, const std::string& cloud_name, const std::string& normals_name)
+  double* color_normals, const std::string& cloud_name, const std::string& normals_name) const
 {
   viewer->addPointCloud<pcl::PointNormal>(cloud, cloud_name);
   viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, color_cloud[0],
@@ -295,7 +296,7 @@ void Plot::addCloudNormalsToViewer(boost::shared_ptr<pcl::visualization::PCLVisu
 
 void Plot::plotHandsHelper(const PointCloudNormal::Ptr& hands_cloud,
   const PointCloudNormal::Ptr& antipodal_hands_cloud, const PointCloudRGBA::Ptr& cloud,
-  std::string str, bool use_grasp_bottom)
+  std::string str, bool use_grasp_bottom) const
 {
   std::cout << "Drawing " << hands_cloud->size() << " grasps of which " << antipodal_hands_cloud->size()
 			  << " are antipodal grasps.\n";
@@ -322,7 +323,7 @@ void Plot::plotHandsHelper(const PointCloudNormal::Ptr& hands_cloud,
 }
 
 
-void Plot::runViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewer)
+void Plot::runViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewer) const
 {
   while (!viewer->wasStopped())
   {
@@ -334,7 +335,7 @@ void Plot::runViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewe
 }
 
 
-boost::shared_ptr<pcl::visualization::PCLVisualizer> Plot::createViewer(std::string title)
+boost::shared_ptr<pcl::visualization::PCLVisualizer> Plot::createViewer(std::string title) const
 {
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer(title));  
   //  viewer->initCameraParameters();
@@ -369,7 +370,7 @@ boost::shared_ptr<pcl::visualization::PCLVisualizer> Plot::createViewer(std::str
 }
 
 
-void Plot::drawCloud(const PointCloudRGBA::Ptr& cloud_rgb, const std::string& title)
+void Plot::drawCloud(const PointCloudRGBA::Ptr& cloud_rgb, const std::string& title) const
 {
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer(title);
   pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> rgb(cloud_rgb);
@@ -379,7 +380,7 @@ void Plot::drawCloud(const PointCloudRGBA::Ptr& cloud_rgb, const std::string& ti
 }
 
 
-pcl::PointXYZRGBA Plot::eigenVector3dToPointXYZRGBA(const Eigen::Vector3d& v)
+pcl::PointXYZRGBA Plot::eigenVector3dToPointXYZRGBA(const Eigen::Vector3d& v) const
 {
   pcl::PointXYZRGBA p;
   p.x = v(0);
@@ -389,7 +390,7 @@ pcl::PointXYZRGBA Plot::eigenVector3dToPointXYZRGBA(const Eigen::Vector3d& v)
 }
 
 
-void Plot::setPointColor(const GraspHypothesis& hand, pcl::PointXYZRGBA& p)
+void Plot::setPointColor(const GraspHypothesis& hand, pcl::PointXYZRGBA& p) const
 {
   p.a = 0.5;
 

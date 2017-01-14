@@ -31,6 +31,7 @@ std::vector<double> stringToDouble(const std::string& str)
 
 int main(int argc, char* argv[])
 {
+  // Read arguments from command line.
   if (argc < 3)
   {
     std::cout << "Not enough input arguments!\n";
@@ -39,7 +40,7 @@ int main(int argc, char* argv[])
     return (-1);
   }
 
-  // read parameters from configuration file
+  // Read parameters from configuration file.
   ConfigFile config_file(argv[1]);
 
   double finger_width = config_file.getValueOfKey<double>("finger_width", 0.01);
@@ -77,12 +78,15 @@ int main(int argc, char* argv[])
   std::cout << "rotation_axis: " << rotation_axis << "\n";
 
   bool plot_grasps = config_file.getValueOfKey<bool>("plot_grasps", true);
+  bool plot_normals = config_file.getValueOfKey<bool>("plot_normals", false);
   std::cout << "plot_grasps: " << plot_grasps << "\n";
+  std::cout << "plot_normals: " << plot_normals << "\n";
 
-  // create object to generate grasp candidates
+  // Create object to generate grasp candidates.
   GraspCandidatesGenerator::Parameters generator_params;
   generator_params.num_samples_ = num_samples;
   generator_params.num_threads_ = num_threads;
+  generator_params.plot_normals_ = plot_normals;
   generator_params.plot_grasps_ = plot_grasps;
   generator_params.remove_statistical_outliers_ = remove_outliers;
   generator_params.voxelize_ = voxelize;
@@ -100,18 +104,22 @@ int main(int argc, char* argv[])
   hand_search_params.rotation_axis_ = rotation_axis;
   GraspCandidatesGenerator candidates_generator(generator_params, hand_search_params);
 
-  // create object to load point cloud from file
-  CloudCamera cloud_cam(argv[2]);
+  // Set the camera pose.
+  Eigen::Matrix3Xd view_points(3,1);
+  view_points << camera_pose[3], camera_pose[6], camera_pose[9];
+
+  // Create object to load point cloud from file.
+  CloudCamera cloud_cam(argv[2], view_points);
   if (cloud_cam.getCloudOriginal()->size() == 0)
   {
     std::cout << "Input point cloud is empty or does not exist!\n";
     return (-1);
   }
 
-  // point cloud preprocessing: voxelization, removing statistical outliers, workspace filtering
+  // Point cloud preprocessing: voxelize, remove statistical outliers, workspace filter, subsample, compute normals.
   candidates_generator.preprocessPointCloud(cloud_cam);
 
-  // generate a list of grasp candidates
+  // Generate a list of grasp candidates.
   std::vector<GraspHypothesis> candidates = candidates_generator.generateGraspCandidates(cloud_cam);
 
   return 0;

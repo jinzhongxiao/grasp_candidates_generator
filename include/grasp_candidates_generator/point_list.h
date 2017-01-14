@@ -53,13 +53,13 @@ class PointList
 
     PointList sliceMatrix(const std::vector<int>& indices) const;
 
-    PointList createPermutation(const Eigen::Vector3i& order) const;
-
     Eigen::Matrix3Xd sliceMatrix(const Eigen::Matrix3Xd& mat, const std::vector<int>& indices) const;
 
     Eigen::MatrixXi sliceMatrix(const Eigen::MatrixXi& mat, const std::vector<int>& indices) const;
 
     PointList transformToHandFrame(const Eigen::Vector3d& centroid, const Eigen::Matrix3d& rotation) const;
+
+    PointList rotatePointList(const Eigen::Matrix3d& rotation) const;
 
     const Eigen::MatrixXi& getCamSource() const
     {

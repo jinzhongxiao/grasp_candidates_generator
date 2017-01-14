@@ -55,18 +55,18 @@ class FrameEstimator
     FrameEstimator(int num_threads) : num_threads_(num_threads) { }
 
     std::vector<LocalFrame> calculateLocalFrames(const CloudCamera& cloud_cam, const std::vector<int>& indices,
-      double radius, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree);
+      double radius, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
 
     std::vector<LocalFrame> calculateLocalFrames(const CloudCamera& cloud_cam, const Eigen::Matrix3Xd& samples,
-      double radius, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree);
+      double radius, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
 
-    LocalFrame* calculateFrame(const CloudCamera& cloud_cam, const Eigen::Vector3d& sample, double radius,
-      const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree);
+    LocalFrame* calculateFrame(const Eigen::Matrix3Xd& normals, const Eigen::Vector3d& sample, double radius,
+      const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
 
 
   private:
 
-    pcl::PointXYZRGBA eigenVectorToPcl(const Eigen::Vector3d& v);
+    pcl::PointXYZRGBA eigenVectorToPcl(const Eigen::Vector3d& v) const;
 
     int num_threads_;
 };

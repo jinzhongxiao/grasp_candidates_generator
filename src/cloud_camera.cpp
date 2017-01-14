@@ -59,10 +59,9 @@ CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, c
 }
 
 
-CloudCamera::CloudCamera(const std::string& filename) : cloud_processed_(new PointCloudRGB)
+CloudCamera::CloudCamera(const std::string& filename, const Eigen::Matrix3Xd& view_points)
+  : cloud_processed_(new PointCloudRGB), view_points_(view_points)
 {
-  view_points_.resize(3,1);
-  view_points_ << 0.0, 0.0, 0.0;
   sample_indices_.resize(0);
   cloud_processed_ = loadPointCloudFromFile(filename);
   cloud_original_ = cloud_processed_;
@@ -71,11 +70,9 @@ CloudCamera::CloudCamera(const std::string& filename) : cloud_processed_(new Poi
 }
 
 
-CloudCamera::CloudCamera(const std::string& filename_left, const std::string& filename_right)
-  : cloud_processed_(new PointCloudRGB)
+CloudCamera::CloudCamera(const std::string& filename_left, const std::string& filename_right,
+    const Eigen::Matrix3Xd& view_points) : cloud_processed_(new PointCloudRGB), view_points_(view_points)
 {
-  view_points_.resize(3,1);
-  view_points_ << 0.0, 0.0, 0.0;
   sample_indices_.resize(0);
 
   // load and combine the two point clouds
@@ -162,49 +159,62 @@ void CloudCamera::voxelizeCloud(double cell_size)
   min_xyz << pts.row(0).minCoeff(), pts.row(1).minCoeff(), pts.row(2).minCoeff();
 
   // find the cell that each point falls into
-  std::set<Eigen::Vector3i, CloudCamera::UniqueVectorComparator> bins;
-  std::vector<int> idx_cam_source;
-  std::vector<int> idx_normals;
+  std::set< Eigen::Vector4i, CloudCamera::UniqueVectorFirstThreeElementsComparator> bins;
+  std::vector<Eigen::Vector3d> avg_normals;
+  avg_normals.resize(pts.cols());
+  std::vector<int> counts;
+  counts.resize(pts.cols());
+
   for (int i = 0; i < pts.cols(); i++)
   {
     Eigen::Vector3f p;
     p << pts.col(i)(0), pts.col(i)(1), pts.col(i)(2);
     Eigen::Vector3i v = floorVector((p - min_xyz) / cell_size);
-    std::pair< std::set<Eigen::Vector3i, CloudCamera::UniqueVectorComparator>::iterator, bool> b = bins.insert(v);
-    if (b.second)
+    Eigen::Vector4i v4;
+    v4 << v(0), v(1), v(2), i;
+    std::pair< std::set<Eigen::Vector4i, CloudCamera::UniqueVectorFirstThreeElementsComparator>::iterator, bool> res = bins.insert(v4);
+
+    if (res.second && normals_.cols() > 0)
     {
-      idx_cam_source.push_back(i);
-      if (normals_.cols() > 0)
-      {
-        idx_normals.push_back(i);
-      }
+      avg_normals[i] = normals_.col(i);
+      counts[i] = 1;
+    }
+    else if (normals_.cols() > 0)
+    {
+      const int& idx = (*res.first)(3);
+      avg_normals[idx] += normals_.col(i);
+      counts[idx]++;
     }
   }
 
-  // calculate the cell values and set the camera source for each point
+  // Calculate the point value and the average surface normal for each cell, and set the camera source for each point.
   Eigen::Matrix3Xf voxels(3, bins.size());
   Eigen::Matrix3Xd normals(3, bins.size());
   Eigen::MatrixXi camera_source(camera_source_.rows(), bins.size());
   int i = 0;
-  std::set<Eigen::Vector3i, CloudCamera::UniqueVectorComparator>::iterator it;
+  std::set<Eigen::Vector4i, CloudCamera::UniqueVectorFirstThreeElementsComparator>::iterator it;
+
   for (it = bins.begin(); it != bins.end(); it++)
   {
-    voxels.col(i) = (*it).cast<float>();
+    voxels.col(i) = (*it).block(0,0,3,1).cast<float>();
+    const int& idx = (*it)(3);
+
     for (int j = 0; j < camera_source_.rows(); j++)
     {
-      camera_source(j,i) = (camera_source_(j,idx_cam_source[i]) == 1) ? 1 : 0;
+      camera_source(j,i) = (camera_source_(j, idx) == 1) ? 1 : 0;
     }
     if (normals_.cols() > 0)
     {
-      normals.col(i) = normals_.col(idx_normals[i]);
+      normals.col(i) = avg_normals[idx] / (double) counts[idx];
     }
     i++;
   }
+
   voxels.row(0) = voxels.row(0) * cell_size + Eigen::VectorXf::Ones(voxels.cols()) * min_xyz(0);
   voxels.row(1) = voxels.row(1) * cell_size + Eigen::VectorXf::Ones(voxels.cols()) * min_xyz(1);
   voxels.row(2) = voxels.row(2) * cell_size + Eigen::VectorXf::Ones(voxels.cols()) * min_xyz(2);
 
-//  cloud_->getMatrixXfMap() = voxels;
+  // Copy the voxels into the point cloud.
   cloud_processed_->points.resize(voxels.cols());
   for(int i=0; i < voxels.cols(); i++)
   {
@@ -225,10 +235,6 @@ void CloudCamera::subsampleUniformly(int num_samples)
   random_sample.setInputCloud(cloud_processed_);
   random_sample.setSample(num_samples);
   random_sample.filter(sample_indices_);
-//  std::cout << "sample_indices_: \n";
-//  for (int i=0; i < sample_indices_.size(); i++)
-//    std::cout << sample_indices_[i] << " ";
-//  std::cout << "\n";
 }
 
 
@@ -277,15 +283,35 @@ void CloudCamera::writeNormalsToFile(const std::string& filename, const Eigen::M
 
 void CloudCamera::calculateNormals(int num_threads)
 {
-  pcl::NormalEstimationOMP<pcl::PointXYZRGBA, pcl::Normal> estimator(num_threads);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals_omp(new pcl::PointCloud<pcl::Normal>);
-  pcl::search::KdTree<pcl::PointXYZRGBA>::Ptr tree_ptr(new pcl::search::KdTree<pcl::PointXYZRGBA>);
-  estimator.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
-  estimator.setInputCloud(cloud_processed_);
-  estimator.setSearchMethod(tree_ptr);
-  estimator.setRadiusSearch(0.03);
-  estimator.compute(*cloud_normals_omp);
-  normals_ = cloud_normals_omp->getMatrixXfMap().cast<double>();
+  double t0 = omp_get_wtime();
+  std::cout << "Calculating surface normals";
+
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+
+  if (cloud_processed_->isOrganized())
+  {
+    std::cout << " using integral images ...\n";
+    pcl::IntegralImageNormalEstimation<pcl::PointXYZRGBA, pcl::Normal> ne;
+    ne.setInputCloud(cloud_processed_);
+    ne.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
+    ne.setNormalEstimationMethod(ne.COVARIANCE_MATRIX);
+    ne.setNormalSmoothingSize(20.0f);
+    ne.compute(*cloud_normals);
+  }
+  else
+  {
+    std::cout << " using normal estimation OMP ...\n";
+    pcl::NormalEstimationOMP<pcl::PointXYZRGBA, pcl::Normal> estimator(num_threads);
+    pcl::search::KdTree<pcl::PointXYZRGBA>::Ptr tree_ptr(new pcl::search::KdTree<pcl::PointXYZRGBA>);
+    estimator.setInputCloud(cloud_processed_);
+    estimator.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
+    estimator.setSearchMethod(tree_ptr);
+    estimator.setRadiusSearch(0.03);
+    estimator.compute(*cloud_normals);
+  }
+
+  std::cout << " runtime: " << omp_get_wtime() - t0 << "\n";
+  normals_ = cloud_normals->getMatrixXfMap().cast<double>();
 }
 
 
@@ -314,7 +340,7 @@ void CloudCamera::setNormalsFromFile(const std::string& filename)
 }
 
 
-Eigen::Vector3i CloudCamera::floorVector(const Eigen::Vector3f& a)
+Eigen::Vector3i CloudCamera::floorVector(const Eigen::Vector3f& a) const
 {
   Eigen::Vector3i b;
   b << floor(a(0)), floor(a(1)), floor(a(2));
@@ -322,7 +348,7 @@ Eigen::Vector3i CloudCamera::floorVector(const Eigen::Vector3f& a)
 }
 
 
-PointCloudRGB::Ptr CloudCamera::loadPointCloudFromFile(const std::string& filename)
+PointCloudRGB::Ptr CloudCamera::loadPointCloudFromFile(const std::string& filename) const
 {
   PointCloudRGB::Ptr cloud(new PointCloudRGB);
   if (pcl::io::loadPCDFile<pcl::PointXYZRGBA>(filename, *cloud) == -1)
