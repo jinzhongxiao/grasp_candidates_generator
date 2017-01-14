@@ -34,13 +34,13 @@ add_library(point_list src/point_list.cpp)
 
 # This executable is for testing the shared library
 add_executable(generate_candidates src/generate_candidates.cpp)
-
 target_link_libraries(generate_candidates grasp_candidates_generator hand_search ${PCL_LIBRARIES})
 
+# Linking for libraries
 target_link_libraries(antipodal point_list)
 target_link_libraries(cloud_camera ${PCL_LIBRARIES})
 target_link_libraries(frame_estimator cloud_camera local_frame ${PCL_LIBRARIES})
-target_link_libraries(grasp_hypothesis finger_hand point_list)
+target_link_libraries(grasp_hypothesis finger_hand)
 target_link_libraries(hand_search antipodal cloud_camera finger_hand frame_estimator grasp_hypothesis local_frame plot 
   point_list ${PCL_LIBRARIES})
 target_link_libraries(local_frame ${PCL_LIBRARIES})
@@ -48,7 +48,7 @@ target_link_libraries(local_frame ${PCL_LIBRARIES})
 target_link_libraries(plot grasp_hypothesis local_frame ${PCL_LIBRARIES})
 target_link_libraries(grasp_candidates_generator cloud_camera hand_search plot ${PCL_LIBRARIES})
 
-# Set the location for library installation -- i.e., /usr/lib in this case not really necessary in this example. Use 
-# "sudo make install" to apply
+# Set the location for library installation (/usr/lib in this case is not really necessary)
+# Use "sudo make install" to apply
 install(TARGETS grasp_candidates_generator DESTINATION /usr/lib)
 install(DIRECTORY include/grasp_candidates_generator DESTINATION /usr/local/include)

@@ -33,7 +33,6 @@ PointCloudRGBA::Ptr Plot::createFingersCloud(const std::vector<GraspHypothesis>&
     pcl::PointXYZRGBA pc = eigenVector3dToPointXYZRGBA(hand_list[i].getGraspBottom());
     setPointColor(hand_list[i], pc);
 
-    //    double width = hand_list[i].getGraspWidth();
     double width = outer_diameter;
     double hw = 0.5 * width;
     double step = hw / 30.0;

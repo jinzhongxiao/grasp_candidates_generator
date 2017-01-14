@@ -47,7 +47,6 @@
 
 // custom
 #include <grasp_candidates_generator/finger_hand.h>
-#include <grasp_candidates_generator/point_list.h>
 
 
 struct GraspPose
@@ -56,15 +55,6 @@ struct GraspPose
   Eigen::Vector3d bottom_; ///< the centered grasp position at the base of the robot hand
   Eigen::Vector3d top_; ///< the centered grasp position between the fingertips of the robot hand
   Eigen::Matrix3d frame_; ///< the local reference frame for this grasp hypothesis
-};
-
-
-struct DataForLearning
-{
-  Eigen::Matrix3Xd points_; ///< the points used by the classifier
-  Eigen::Matrix3Xd normals_; ///< the normals used by the classifier
-  Eigen::MatrixXi camera_source_; ///< the camera source for each point used by the classifier
-  int finger_placement_index_; // index of the finger placement that resulted in this grasp
 };
 
 
@@ -103,7 +93,7 @@ public:
   GraspHypothesis() { }
 
   GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand,
-    const PointList& point_list_learning);
+    double width);
 
   GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand);
 
@@ -186,24 +176,6 @@ public:
   bool isHalfAntipodal() const
   {
     return label_.half_antipodal_;
-  }
-
-  /**
-   * \brief Return the points used for training/prediction by the SVM that belong to camera #2.
-   * \return the list of points used for training/prediction by the SVM that belong to camera #2
-   */
-  const Eigen::Matrix3Xd& getPointsForLearning() const
-  {
-    return learning_data_.points_;
-  }
-
-  /**
-   * \brief Return the normals used for training/prediction by the SVM that belong to camera #2.
-   * \return the list of normals used for training/prediction by the SVM that belong to camera #2
-   */
-  const Eigen::Matrix3Xd& getNormalsForLearning() const
-  {
-    return learning_data_.normals_;
   }
 
   /**
@@ -309,7 +281,7 @@ public:
 
   int getFingerPlacementIndex () const
   {
-    return learning_data_.finger_placement_index_;
+    return finger_placement_index_;
   }
 
 
@@ -326,7 +298,7 @@ protected:
 
   GraspPose pose_; ///< the grasp pose
   Label label_; ///< labeling information
-  DataForLearning learning_data_; ///< data required for the classifier
+  int finger_placement_index_; ///< index of the finger placement that resulted in this grasp
   Configuration1D config_1d_; ///< position of fingers and base relative to local hand frame
 };
 

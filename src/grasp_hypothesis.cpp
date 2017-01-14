@@ -2,19 +2,12 @@
 
 
 GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame,
-  const FingerHand& finger_hand, const PointList& point_list_learning)
-: sample_(sample)
+  const FingerHand& finger_hand, double grasp_width)
+: sample_(sample), grasp_width_(grasp_width)
 {
   pose_.frame_ = frame;
 
   construct(finger_hand);
-
-  // calculate grasp width (hand opening width)
-  grasp_width_ = point_list_learning.getPoints().row(0).maxCoeff() - point_list_learning.getPoints().row(0).minCoeff();
-
-  learning_data_.points_ = point_list_learning.getPoints();
-  learning_data_.normals_ = point_list_learning.getNormals();
-  learning_data_.camera_source_ = point_list_learning.getCamSource();
 }
 
 
@@ -46,10 +39,14 @@ void GraspHypothesis::construct(const FingerHand& finger_hand)
   {
     if (indices[i] == true)
     {
-      learning_data_.finger_placement_index_ = i;
+      finger_placement_index_ = i;
       break;
     }
   }
+
+  label_.score_ = 0.0;
+  label_.full_antipodal_ = false;
+  label_.half_antipodal_ = false;
 }
 
 

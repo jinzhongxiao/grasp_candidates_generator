@@ -384,7 +384,10 @@ GraspHypothesis HandSearch::createGraspHypothesis(const Eigen::Vector3d& sample,
   int antipodal_result = antipodal.evaluateGrasp(point_list_learning, 0.003, finger_hand.getLateralAxis(),
     finger_hand.getForwardAxis(), rotation_axis_);
 
-  GraspHypothesis hand(sample, hand_frame, finger_hand, point_list_learning);
+  // calculate grasp width (hand opening width)
+  double width = point_list_learning.getPoints().row(0).maxCoeff() - point_list_learning.getPoints().row(0).minCoeff();
+
+  GraspHypothesis hand(sample, hand_frame, finger_hand, width);
   hand.setHalfAntipodal(antipodal_result == Antipodal::HALF_GRASP || antipodal_result == Antipodal::FULL_GRASP);
   hand.setFullAntipodal(antipodal_result == Antipodal::FULL_GRASP);
 
