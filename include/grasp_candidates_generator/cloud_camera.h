@@ -79,11 +79,13 @@ public:
     */
     bool operator ()(const Eigen::Vector3i& a, const Eigen::Vector3i& b)
     {
+//      return a(0) < b(0) && a(1) < b(1) && a(2) < b(2);
+
       for (int i = 0; i < a.size(); i++)
       {
         if (a(i) != b(i))
         {
-          return true;
+          return a(i) < b(i);
         }
       }
 
