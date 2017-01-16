@@ -75,7 +75,7 @@ public:
   struct Parameters
   {
     /** local reference frame estimation parameters */
-    double nn_radius_taubin_; ///< local reference frame radius for point neighborhood search
+    double nn_radius_frames_; ///< local reference frame radius for point neighborhood search
 
     /** grasp hypotheses generation */
     int num_threads_; ///< the number of CPU threads to be used for the hypothesis generation
@@ -93,29 +93,12 @@ public:
     double init_bite_; ///< the minimum object height
   };
 
-  HandSearch() : plots_camera_sources_(false), plots_local_axes_(false), num_threads_(1), rotation_axis_(-1)
+  HandSearch() : plots_samples_(false), plots_local_axes_(false), plots_camera_sources_(false)
   { }
 
-  HandSearch(Parameters params) : plots_samples_(false), plots_local_axes_(false), plots_camera_sources_(false)
-  {
-    setParameters(params);
-  }
-
-  /**
-   * \brief Constructor.
-   * \param finger_width the width of the robot hand fingers
-   * \param hand_outer_diameter the maximum robot hand aperture
-   * \param hand_depth the hand depth (length of fingers)
-   * \param hand_height the hand extends plus/minus this value along the hand axis
-   * \param init_bite the minimum object height
-   * \param num_threads the number of CPU threads to be used for the search
-   * \param num_samples the number of samples drawn from the point cloud
-   */
-  HandSearch(double finger_width, double hand_outer_diameter, double hand_depth, double hand_height, double init_bite,
-    int num_threads, int num_samples) : finger_width_(finger_width), hand_outer_diameter_(hand_outer_diameter),
-      hand_depth_(hand_depth), hand_height_(hand_height), init_bite_(init_bite), num_threads_(num_threads), 
-      num_samples_(num_samples), plots_samples_(false), plots_local_axes_(false), nn_radius_taubin_(0.03)
-    { }
+  HandSearch(Parameters params) : params_(params), plots_samples_(false), plots_local_axes_(false),
+    plots_camera_sources_(false)
+  { }
 
   std::vector<GraspHypothesis> generateHypotheses(const CloudCamera& cloud_cam, int antipodal_mode, bool use_samples,
     bool forces_PSD = false, bool plots_normals = false, bool plots_samples = false) const;
@@ -123,21 +106,9 @@ public:
   std::vector<GraspHypothesis> reevaluateHypotheses(const CloudCamera& cloud_cam,
     const std::vector<GraspHypothesis>& grasps, bool plot_samples = false) const;
 
-  void setParameters(const Parameters& params);
-
-  void setCamTfLeft(const Eigen::Matrix4d& cam_tf_left)
+  void setParameters(const Parameters& params)
   {
-    cam_tf_left_ = cam_tf_left;
-  }
-
-  void setCamTfRight(const Eigen::Matrix4d& cam_tf_right)
-  {
-    cam_tf_right_ = cam_tf_right;
-  }
-
-  void setNumThreads(int num_threads)
-  {
-    num_threads_ = num_threads;
+    params_ = params;
   }
 
 
@@ -161,27 +132,12 @@ private:
   GraspHypothesis createGraspHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
     const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const;
 
-  Eigen::Matrix4d cam_tf_left_, cam_tf_right_; ///< camera poses
-
-  /** hand geometry parameters */
-  double finger_width_; ///< the finger width
-  double hand_outer_diameter_; ///< the maximum robot hand aperture
-  double hand_depth_; ///< the finger length
-  double hand_height_; ///< the hand extends plus/minus this value along the hand axis
-  double init_bite_; ///< the minimum object height
-
-  /** hand search parameters */
-  int rotation_axis_; ///< the rotation axis about which different hand orientations are generated
-  int num_orientations_; ///< the number of hand orientations to consider
-  int num_threads_; ///< the number of threads used in the search
-  int num_samples_; ///< the number of samples used in the search
-  double nn_radius_taubin_; ///< the radius for the neighborhood search for the quadratic surface fit
-  int antipodal_method_; ///< the antipodal calculation method
+  Parameters params_; ///< parameters for the hand search
 
   Eigen::Matrix3Xd cloud_normals_; ///< a 3xn matrix containing the normals for points in the point cloud
   Plot plot_; ///< plot object for visualization of search results
 
-  /** plotting parameters (optional, not read in from ROS launch file) **/
+  /** plotting parameters (optional, not read in from config file) **/
   bool plots_samples_; ///< are the samples drawn from the point cloud plotted?
   bool plots_camera_sources_; ///< is the camera source for each point in the point cloud plotted?
   bool plots_local_axes_; ///< are the local axes estimated for each point neighborhood plotted?

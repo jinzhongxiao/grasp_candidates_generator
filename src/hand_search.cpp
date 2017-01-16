@@ -9,7 +9,7 @@ const int HandSearch::ROTATION_AXIS_CURVATURE_AXIS = 2;
 std::vector<GraspHypothesis> HandSearch::generateHypotheses(const CloudCamera& cloud_cam, int antipodal_mode,
   bool use_samples, bool forces_PSD, bool plots_normals, bool plots_samples) const
 {
-  if (rotation_axis_ < 0 || rotation_axis_ > 2)
+  if (params_.rotation_axis_ < 0 || params_.rotation_axis_ > 2)
   {
     std::cout << "Parameter <rotation_axis> is not set correctly!\n";
     std::vector<GraspHypothesis> empty(0);
@@ -47,11 +47,11 @@ std::vector<GraspHypothesis> HandSearch::generateHypotheses(const CloudCamera& c
   // 1. Estimate local reference frames.
   std::cout << "Estimating local reference frames ...\n";
   std::vector<LocalFrame> frames;
-  FrameEstimator frame_estimator(num_threads_);
+  FrameEstimator frame_estimator(params_.num_threads_);
   if (use_samples)
-    frames = frame_estimator.calculateLocalFrames(cloud_cam, cloud_cam.getSamples(), nn_radius_taubin_, kdtree);
+    frames = frame_estimator.calculateLocalFrames(cloud_cam, cloud_cam.getSamples(), params_.nn_radius_frames_, kdtree);
   else
-    frames = frame_estimator.calculateLocalFrames(cloud_cam, cloud_cam.getSampleIndices(), nn_radius_taubin_, kdtree);
+    frames = frame_estimator.calculateLocalFrames(cloud_cam, cloud_cam.getSampleIndices(), params_.nn_radius_frames_, kdtree);
   if (plots_local_axes_)
     plot_.plotLocalAxes(frames, cloud_cam.getCloudOriginal());
 
@@ -70,7 +70,7 @@ std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera&
 {
   // calculate radius for points in closing region of robot hand
   Eigen::Vector3d radius_options;
-  radius_options << hand_outer_diameter_ - finger_width_, hand_depth_, hand_height_/2.0;
+  radius_options << params_.hand_outer_diameter_ - params_.finger_width_, params_.hand_depth_, params_.hand_height_/2.0;
   double radius = radius_options.maxCoeff();
 
   // create KdTree for neighborhood search
@@ -99,7 +99,7 @@ std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera&
   std::vector<int> labels(grasps.size()); // -1: not feasible, 0: feasible, >0: see Antipodal class
 
 #ifdef _OPENMP // parallelization using OpenMP
-#pragma omp parallel for private(nn_indices, nn_dists, nn_points) num_threads(num_threads_)
+#pragma omp parallel for private(nn_indices, nn_dists, nn_points) num_threads(params_.num_threads_)
 #endif
   for (int i = 0; i < grasps.size(); i++)
   {
@@ -111,10 +111,10 @@ std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera&
       nn_points = point_list.sliceMatrix(nn_indices);
       nn_points.setPoints(nn_points.getPoints() - grasps[i].getSample().replicate(1, nn_points.size()));
       PointList nn_points_frame;
-      FingerHand finger_hand(finger_width_, hand_outer_diameter_, hand_depth_);
+      FingerHand finger_hand(params_.finger_width_, params_.hand_outer_diameter_, params_.hand_depth_);
 
       // set the lateral and forward axes of the robot hand frame (closing direction and grasp approach direction)
-      if (rotation_axis_ == ROTATION_AXIS_CURVATURE_AXIS)
+      if (params_.rotation_axis_ == ROTATION_AXIS_CURVATURE_AXIS)
       {
         finger_hand.setLateralAxis(1);
         finger_hand.setForwardAxis(0);
@@ -153,25 +153,6 @@ pcl::PointXYZRGBA HandSearch::eigenVectorToPcl(const Eigen::Vector3d& v) const
 }
 
 
-void HandSearch::setParameters(const Parameters& params)
-{
-  finger_width_ = params.finger_width_;
-  hand_outer_diameter_= params.hand_outer_diameter_;
-  hand_depth_ = params.hand_depth_;
-  hand_height_ = params.hand_height_;
-  init_bite_ = params.init_bite_;
-
-  num_threads_ = params.num_threads_;
-  num_samples_ = params.num_samples_;
-  nn_radius_taubin_ = params.nn_radius_taubin_;
-  num_orientations_ = params.num_orientations_;
-  rotation_axis_ = params.rotation_axis_;
-
-  cam_tf_left_ = params.cam_tf_left_;
-  cam_tf_right_ = params.cam_tf_right_;
-}
-
-
 std::vector<GraspHypothesis> HandSearch::evaluateHands(const CloudCamera& cloud_cam,
   const std::vector<LocalFrame>& frames, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const
 {
@@ -179,12 +160,12 @@ std::vector<GraspHypothesis> HandSearch::evaluateHands(const CloudCamera& cloud_
 
   // calculate radius for points in closing region of robot hand
   Eigen::Vector3d radius_options;
-  radius_options << hand_outer_diameter_ - finger_width_, hand_depth_, hand_height_/2.0;
+  radius_options << params_.hand_outer_diameter_ - params_.finger_width_, params_.hand_depth_, params_.hand_height_/2.0;
   double radius = radius_options.maxCoeff();
 
   // possible angles used for hand orientations
-  Eigen::VectorXd angles = Eigen::VectorXd::LinSpaced(num_orientations_ + 1, -1.0 * M_PI/2.0, M_PI/2.0);
-  angles = angles.block(0, 0, num_orientations_, 1);
+  Eigen::VectorXd angles = Eigen::VectorXd::LinSpaced(params_.num_orientations_ + 1, -1.0 * M_PI/2.0, M_PI/2.0);
+  angles = angles.block(0, 0, params_.num_orientations_, 1);
 
   std::vector<int> nn_indices;
   std::vector<float> nn_dists;
@@ -195,7 +176,7 @@ std::vector<GraspHypothesis> HandSearch::evaluateHands(const CloudCamera& cloud_
   PointList nn_points;
 
 #ifdef _OPENMP // parallelization using OpenMP
-#pragma omp parallel for private(nn_indices, nn_dists, nn_points) num_threads(num_threads_)
+#pragma omp parallel for private(nn_indices, nn_dists, nn_points) num_threads(params_.num_threads_)
 #endif
   for (std::size_t i = 0; i < frames.size(); i++)
   {
@@ -230,10 +211,10 @@ std::vector<GraspHypothesis> HandSearch::evaluateHands(const CloudCamera& cloud_
 std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& sample, const PointList& point_list,
   const LocalFrame& local_frame, const Eigen::VectorXd& angles) const
 {
-  FingerHand finger_hand(finger_width_, hand_outer_diameter_, hand_depth_);
+  FingerHand finger_hand(params_.finger_width_, params_.hand_outer_diameter_, params_.hand_depth_);
 
   // set the lateral and forward axes of the robot hand frame (closing direction and grasp approach direction)
-  if (rotation_axis_ == ROTATION_AXIS_CURVATURE_AXIS)
+  if (params_.rotation_axis_ == ROTATION_AXIS_CURVATURE_AXIS)
   {
     finger_hand.setLateralAxis(1);
     finger_hand.setForwardAxis(0);
@@ -242,8 +223,8 @@ std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& s
   // rotation about binormal by 180 degrees (reverses direction of normal)
   Eigen::Matrix3d rot_binormal;
   rot_binormal <<  -1.0,  0.0,  0.0,
-                    0.0,  1.0,  0.0,
-                    0.0,  0.0, -1.0;
+    0.0,  1.0,  0.0,
+    0.0,  0.0, -1.0;
 
   // local reference frame
   Eigen::Matrix3d local_frame_mat;
@@ -256,18 +237,18 @@ std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& s
     // rotation about curvature axis by <angles(i)> radians
     Eigen::Matrix3d rot;
     rot <<  cos(angles(i)),  -1.0 * sin(angles(i)),  0.0,
-            sin(angles(i)),  cos(angles(i)),         0.0,
-            0.0,             0.0,                    1.0;
+      sin(angles(i)),  cos(angles(i)),         0.0,
+      0.0,             0.0,                    1.0;
 
     // rotate points into this hand orientation
     Eigen::Matrix3d frame_rot = local_frame_mat * rot_binormal * rot;
     PointList point_list_frame = point_list.rotatePointList(frame_rot.transpose());
 
     // crop points based on hand height
-    PointList point_list_cropped = cropByHandHeight(point_list_frame, hand_height_);
+    PointList point_list_cropped = cropByHandHeight(point_list_frame, params_.hand_height_);
 
     // evaluate finger locations for this orientation
-    finger_hand.evaluateFingers(point_list_cropped.getPoints(), init_bite_);
+    finger_hand.evaluateFingers(point_list_cropped.getPoints(), params_.init_bite_);
 
     // check that there are at least two corresponding finger placements
     if (finger_hand.getFingers().cast<int>().sum() >= 2)
@@ -277,7 +258,7 @@ std::vector<GraspHypothesis> HandSearch::evaluateHand(const pcl::PointXYZRGBA& s
       if (finger_hand.getHand().cast<int>().sum() > 0)
       {
         // try to move the hand as deep as possible onto the object
-        finger_hand.deepenHand(point_list_cropped.getPoints(), init_bite_, hand_depth_);
+        finger_hand.deepenHand(point_list_cropped.getPoints(), params_.init_bite_, params_.hand_depth_);
 
         // calculate points in the closing region of the hand
         std::vector<int> indices_learning = finger_hand.computePointsInClosingRegion(point_list_cropped.getPoints());
@@ -302,7 +283,7 @@ bool HandSearch::reevaluateHypothesis(const PointList& point_list, const GraspHy
 {
   // Transform points into hand frame and crop them on <hand_height>.
   PointList point_list_frame = point_list.rotatePointList(hand.getFrame().transpose());
-  point_list_cropped = cropByHandHeight(point_list_frame, hand_height_);
+  point_list_cropped = cropByHandHeight(point_list_frame, params_.hand_height_);
 
   // Evaluate finger location for this grasp.
   finger_hand.evaluateFingers(point_list_cropped.getPoints(), hand.getTop(), hand.getFingerPlacementIndex());
@@ -333,14 +314,10 @@ int HandSearch::labelHypothesis(const PointList& point_list, FingerHand& finger_
   // extract data for classification
   PointList point_list_learning = point_list.sliceMatrix(indices_learning);
 
-  // calculate grasp width
-  const Eigen::VectorXd& lateral_pts = point_list_learning.getPoints().row(finger_hand.getLateralAxis());
-  double grasp_width = lateral_pts.maxCoeff() - lateral_pts.minCoeff();
-
   // evaluate if the grasp is antipodal
   Antipodal antipodal;
   int antipodal_result = antipodal.evaluateGrasp(point_list_learning, 0.003, finger_hand.getLateralAxis(),
-  finger_hand.getForwardAxis(), rotation_axis_);
+    finger_hand.getForwardAxis(), params_.rotation_axis_);
 
   return antipodal_result;
 }
@@ -382,7 +359,7 @@ GraspHypothesis HandSearch::createGraspHypothesis(const Eigen::Vector3d& sample,
   // evaluate if the grasp is antipodal
   Antipodal antipodal;
   int antipodal_result = antipodal.evaluateGrasp(point_list_learning, 0.003, finger_hand.getLateralAxis(),
-    finger_hand.getForwardAxis(), rotation_axis_);
+    finger_hand.getForwardAxis(), params_.rotation_axis_);
 
   // calculate grasp width (hand opening width)
   double width = point_list_learning.getPoints().row(0).maxCoeff() - point_list_learning.getPoints().row(0).minCoeff();

@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
   hand_search_params.hand_depth_ = hand_depth;
   hand_search_params.hand_height_ = hand_height;
   hand_search_params.init_bite_ = init_bite;
-  hand_search_params.nn_radius_taubin_ = nn_radius;
+  hand_search_params.nn_radius_frames_ = nn_radius;
   hand_search_params.num_orientations_ = num_orientations;
   hand_search_params.num_samples_ = num_samples;
   hand_search_params.num_threads_ = num_threads;
