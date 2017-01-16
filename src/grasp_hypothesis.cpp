@@ -1,6 +1,12 @@
 #include <grasp_candidates_generator/grasp_hypothesis.h>
 
 
+GraspHypothesis::GraspHypothesis() : grasp_width_(0.0), label_(0.0, false, false)
+{
+
+}
+
+
 GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame,
   const FingerHand& finger_hand, double grasp_width)
 : sample_(sample), grasp_width_(grasp_width)

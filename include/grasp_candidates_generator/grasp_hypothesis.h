@@ -63,6 +63,11 @@ struct Label
   double score_; ///< the score given by the classifier
   bool full_antipodal_; ///< whether the grasp hypothesis is antipodal
   bool half_antipodal_; ///< whether the grasp hypothesis is indeterminate
+
+  Label() : score_(0.0), full_antipodal_(false), half_antipodal_(false) { }
+
+  Label(double score, bool full_antipodal, bool half_antipodal) : score_(score), full_antipodal_(full_antipodal),
+    half_antipodal_(half_antipodal) { }
 };
 
 
@@ -90,7 +95,7 @@ public:
   /**
    * \brief Default constructor.
    */
-  GraspHypothesis() { }
+  GraspHypothesis();
 
   GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand,
     double width);

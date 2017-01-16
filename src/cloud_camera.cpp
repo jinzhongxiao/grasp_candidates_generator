@@ -307,11 +307,13 @@ void CloudCamera::calculateNormals(int num_threads)
     estimator.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
     estimator.setSearchMethod(tree_ptr);
     estimator.setRadiusSearch(0.03);
+//    estimator.setKSearch(30);
     estimator.compute(*cloud_normals);
   }
 
-  std::cout << " runtime: " << omp_get_wtime() - t0 << "\n";
   normals_ = cloud_normals->getMatrixXfMap().cast<double>();
+
+  std::cout << " runtime: " << omp_get_wtime() - t0 << "\n";
 }
 
 
