@@ -129,6 +129,21 @@ class HypothesisSet
       sample_ = sample;
     }
 
+    const Eigen::Array<bool, 1, Eigen::Dynamic>& getIsValid() const
+    {
+      return is_valid_;
+    }
+
+    void setIsValid(const Eigen::Array<bool, 1, Eigen::Dynamic>& isValid)
+    {
+      is_valid_ = isValid;
+    }
+
+    void setIsValidWithIndex(int idx, bool val)
+    {
+      is_valid_[idx] = val;
+    }
+
 
   private:
 
@@ -142,8 +157,9 @@ class HypothesisSet
 
     void labelHypothesis(const PointList& point_list, const FingerHand& finger_hand, GraspHypothesis& hand) const;
 
-    std::vector<GraspHypothesis> hands_;
     Eigen::Vector3d sample_;
+    std::vector<GraspHypothesis> hands_;
+    Eigen::Array<bool, 1, Eigen::Dynamic> is_valid_;
 
     /** robot hand geometry */
     double finger_width_; ///< the width of the robot hand fingers

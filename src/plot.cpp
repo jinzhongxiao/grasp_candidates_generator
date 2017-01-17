@@ -8,7 +8,13 @@ void Plot::plotFingers(const std::vector<HypothesisSet>& hand_set_list, const Po
 
   for (int i = 0; i < hand_set_list.size(); i++)
   {
-    hands.insert(hands.end(), hand_set_list[i].getHypotheses().begin(), hand_set_list[i].getHypotheses().end());
+    for (int j = 0; j < hand_set_list[i].getIsValid().size(); j++)
+    {
+      if (hand_set_list[i].getIsValid()(j))
+      {
+        hands.push_back(hand_set_list[i].getHypotheses()[j]);
+      }
+    }
   }
 
   plotFingers(hands, cloud, str, outer_diameter);

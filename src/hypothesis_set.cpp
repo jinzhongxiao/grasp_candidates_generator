@@ -9,7 +9,9 @@ const int HypothesisSet::ROTATION_AXIS_CURVATURE_AXIS = 2;
 HypothesisSet::HypothesisSet() : finger_width_(0.0), hand_outer_diameter_(0.0), hand_depth_(0.0), hand_height_(0.0),
   init_bite_(0.0), rotation_axis_(-1)
 {
+  sample_.setZero();
   hands_.resize(0);
+  is_valid_.resize(0);
 }
 
 
@@ -18,6 +20,7 @@ void HypothesisSet::evaluateHypotheses(const PointList& point_list, const LocalF
 {
   hands_.resize(angles.size());
   sample_ = local_frame.getSample();
+  is_valid_ = Eigen::Array<bool, 1, Eigen::Dynamic>::Constant(1, angles.size(), false);
 
   FingerHand finger_hand(finger_width_, hand_outer_diameter_, hand_depth_);
 
@@ -78,6 +81,7 @@ void HypothesisSet::evaluateHypotheses(const PointList& point_list, const LocalF
         GraspHypothesis hand = createHypothesis(local_frame.getSample(), point_list_cropped, indices_closing,
           frame_rot, finger_hand);
         hands_[i] = hand;
+        is_valid_[i] = true;
       }
     }
   }
