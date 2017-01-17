@@ -47,8 +47,8 @@
 #include <grasp_candidates_generator/cloud_camera.h>
 #include <grasp_candidates_generator/finger_hand.h>
 #include <grasp_candidates_generator/frame_estimator.h>
-#include <grasp_candidates_generator/grasp_hypothesis.h>
-#include <grasp_candidates_generator/hypothesis_set.h>
+#include <grasp_candidates_generator/grasp.h>
+#include <grasp_candidates_generator/grasp_set.h>
 #include <grasp_candidates_generator/local_frame.h>
 #include <grasp_candidates_generator/plot.h>
 #include <grasp_candidates_generator/point_list.h>
@@ -96,11 +96,11 @@ public:
 
   HandSearch(Parameters params);
 
-  std::vector<HypothesisSet> searchHands(const CloudCamera& cloud_cam, int antipodal_mode, bool use_samples,
+  std::vector<GraspSet> searchHands(const CloudCamera& cloud_cam, int antipodal_mode, bool use_samples,
     bool forces_PSD = false, bool plots_normals = false, bool plots_samples = false) const;
 
-  std::vector<GraspHypothesis> reevaluateHypotheses(const CloudCamera& cloud_cam,
-    const std::vector<GraspHypothesis>& grasps, bool plot_samples = false) const;
+  std::vector<Grasp> reevaluateHypotheses(const CloudCamera& cloud_cam,
+    const std::vector<Grasp>& grasps, bool plot_samples = false) const;
 
   void setParameters(const Parameters& params)
   {
@@ -110,10 +110,10 @@ public:
 
 private:
 
-  std::vector<HypothesisSet> evaluateHands(const CloudCamera& cloud_cam, const std::vector<LocalFrame>& frames,
+  std::vector<GraspSet> evaluateHands(const CloudCamera& cloud_cam, const std::vector<LocalFrame>& frames,
     const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
 
-  bool reevaluateHypothesis(const PointList& point_list, const GraspHypothesis& hand, FingerHand& finger_hand,
+  bool reevaluateHypothesis(const PointList& point_list, const Grasp& hand, FingerHand& finger_hand,
     PointList& point_list_cropped) const;
 
   int labelHypothesis(const PointList& point_list, FingerHand& finger_hand) const;

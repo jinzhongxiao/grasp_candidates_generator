@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #ifndef LOCAL_FRAME_H
 #define LOCAL_FRAME_H
 
@@ -44,10 +45,10 @@ typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
 
 /** LocalFrame class
  *
- * \brief Local reference frame estimation
+ * \brief Local reference frame.
  * 
  * This class estimates the local reference frame for a point neighborhood. The coordinate axes of the local frame are
- * the curvature axis, normal, and binormal.
+ * the normal, binormal, and curvature axis.
  * 
 */
 class LocalFrame
@@ -99,8 +100,8 @@ public:
 	}
 	
 	/**
-	 * \brief Return the binormal for the quadric fitted to the point neighborhood.
-	 * \return the 3x1 binormal for the quadric fitted to the point neighborhood
+	 * \brief Return the binormal.
+	 * \return the 3x1 binormal vector
 	*/
 	const Eigen::Vector3d& getBinormal() const
 	{
@@ -108,8 +109,8 @@ public:
 	}
 	
 	/**
-	 * \brief Return the curvature axis for the quadric fitted to the point neighborhood.
-	 * \return the 3x1 curvature axis for the quadric fitted to the point neighborhood
+	 * \brief Return the curvature axis.
+	 * \return the 3x1 curvature axis vector
 	*/
 	const Eigen::Vector3d& getCurvatureAxis() const
 	{
@@ -117,8 +118,8 @@ public:
 	}
 	
 	/**
-	 * \brief Return the normal for the quadric fitted to the point neighborhood.
-	 * \return the 3x1 normal for the quadric fitted to the point neighborhood
+	 * \brief Return the normal.
+	 * \return the 3x1 normal vector
 	*/
 	const Eigen::Vector3d& getNormal() const
 	{
@@ -141,7 +142,6 @@ private:
   int majority_cam_source_; ///< the majority camera source
   PointCloudRGBA::Ptr input_; ///< the input point cloud
   Eigen::Vector3d curvature_axis_, normal_, binormal_; ///< the curvature, normal, and binormal axis
-  double normals_ratio_; ///< the ratio between the normals of the quadric
 };
 
 #endif // PCL_FEATURES_CURVATURE_ESTIMATION_TAUBIN_H_

@@ -30,8 +30,8 @@
  */
 
 
-#ifndef HYPOTHESIS_SET_H_
-#define HYPOTHESIS_SET_H_
+#ifndef GRASP_SET_H_
+#define GRASP_SET_H_
 
 // System
 #include <vector>
@@ -50,7 +50,7 @@
 // Custom
 #include <grasp_candidates_generator/antipodal.h>
 #include <grasp_candidates_generator/finger_hand.h>
-#include <grasp_candidates_generator/grasp_hypothesis.h>
+#include <grasp_candidates_generator/grasp.h>
 #include <grasp_candidates_generator/local_frame.h>
 #include <grasp_candidates_generator/point_list.h>
 
@@ -94,13 +94,13 @@ struct hash<Eigen::Vector3i>
 typedef boost::unordered_set<Eigen::Vector3i, boost::hash<Eigen::Vector3i> > Vector3iSet;
 
 
-class HypothesisSet
+class GraspSet
 {
   public:
 
-    HypothesisSet();
+    GraspSet();
 
-    HypothesisSet(double finger_width, double hand_outer_diameter, double hand_depth, double hand_height,
+    GraspSet(double finger_width, double hand_outer_diameter, double hand_depth, double hand_height,
       double init_bite, int rotation_axis)
       : finger_width_(finger_width), hand_outer_diameter_(hand_outer_diameter), hand_depth_(hand_depth),
         hand_height_(hand_height), init_bite_(init_bite), rotation_axis_(rotation_axis) { }
@@ -109,12 +109,12 @@ class HypothesisSet
 
     Eigen::Matrix3Xd calculateShadow(const PointList& point_list, double shadow_length) const;
 
-    const std::vector<GraspHypothesis>& getHypotheses() const
+    const std::vector<Grasp>& getHypotheses() const
     {
       return hands_;
     }
 
-    void setHands(const std::vector<GraspHypothesis>& hands)
+    void setHands(const std::vector<Grasp>& hands)
     {
       hands_ = hands;
     }
@@ -152,13 +152,13 @@ class HypothesisSet
 
     Eigen::VectorXi floorVector(const Eigen::VectorXd& a) const;
 
-    GraspHypothesis createHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
+    Grasp createHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
       const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const;
 
-    void labelHypothesis(const PointList& point_list, const FingerHand& finger_hand, GraspHypothesis& hand) const;
+    void labelHypothesis(const PointList& point_list, const FingerHand& finger_hand, Grasp& hand) const;
 
     Eigen::Vector3d sample_;
-    std::vector<GraspHypothesis> hands_;
+    std::vector<Grasp> hands_;
     Eigen::Array<bool, 1, Eigen::Dynamic> is_valid_;
 
     /** robot hand geometry */
@@ -176,4 +176,4 @@ class HypothesisSet
     static const int ROTATION_AXIS_CURVATURE_AXIS; ///< curvature axis of local reference frame
 };
 
-#endif /* HYPOTHESIS_SET_H_ */
+#endif /* GRASP_SET_H_ */

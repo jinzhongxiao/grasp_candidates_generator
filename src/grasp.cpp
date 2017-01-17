@@ -1,13 +1,13 @@
-#include <grasp_candidates_generator/grasp_hypothesis.h>
+#include <grasp_candidates_generator/grasp.h>
 
 
-GraspHypothesis::GraspHypothesis() : grasp_width_(0.0), label_(0.0, false, false)
+Grasp::Grasp() : grasp_width_(0.0), label_(0.0, false, false)
 {
 
 }
 
 
-GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame,
+Grasp::Grasp(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame,
   const FingerHand& finger_hand, double grasp_width)
 : sample_(sample), grasp_width_(grasp_width)
 {
@@ -17,7 +17,7 @@ GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Mat
 }
 
 
-GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame,
+Grasp::Grasp(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame,
   const FingerHand& finger_hand)
 : sample_(sample), grasp_width_(0.0)
 {
@@ -27,7 +27,7 @@ GraspHypothesis::GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Mat
 }
 
 
-void GraspHypothesis::construct(const FingerHand& finger_hand)
+void Grasp::construct(const FingerHand& finger_hand)
 {
   // finger positions and base/bottom and top/fingertip of grasp with respect to hand frame
   config_1d_.left_ = finger_hand.getLeft();
@@ -56,7 +56,7 @@ void GraspHypothesis::construct(const FingerHand& finger_hand)
 }
 
 
-void GraspHypothesis::calculateGraspPositions(const FingerHand& finger_hand)
+void Grasp::calculateGraspPositions(const FingerHand& finger_hand)
 {
   // calculate grasp positions of hand middle on object surface, bottom/base and top/fingertip w.r.t. base frame
   Eigen::Vector3d pos_top, pos_bottom, pos_surface;
@@ -69,7 +69,7 @@ void GraspHypothesis::calculateGraspPositions(const FingerHand& finger_hand)
 }
 
 
-void GraspHypothesis::writeHandsToFile(const std::string& filename, const std::vector<GraspHypothesis>& hands) const
+void Grasp::writeHandsToFile(const std::string& filename, const std::vector<Grasp>& hands) const
 {
   std::ofstream myfile;
   myfile.open (filename.c_str());
@@ -88,7 +88,7 @@ void GraspHypothesis::writeHandsToFile(const std::string& filename, const std::v
 }
 
 
-void GraspHypothesis::print() const
+void Grasp::print() const
 {
   std::cout << "approach: " << getApproach().transpose() << std::endl;
   std::cout << "binormal: " << getBinormal().transpose() << std::endl;
@@ -106,7 +106,7 @@ void GraspHypothesis::print() const
 }
 
 
-std::string GraspHypothesis::vectorToString(const Eigen::VectorXd& v) const
+std::string Grasp::vectorToString(const Eigen::VectorXd& v) const
 {
   std::string s = "";
   for (int i = 0; i < v.rows(); i++)

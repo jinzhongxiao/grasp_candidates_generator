@@ -4,7 +4,6 @@
 void LocalFrame::print()
 {
   std::cout << "sample: " << sample_.transpose() << std::endl;
-  std::cout << "normals_ratio: " << normals_ratio_ << std::endl;
   std::cout << "curvature_axis: " << curvature_axis_.transpose() << std::endl;
   std::cout << "normal: " << normal_.transpose() << std::endl;
   std::cout << "binormal: " << binormal_.transpose() << std::endl;

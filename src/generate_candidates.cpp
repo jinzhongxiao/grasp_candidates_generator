@@ -4,7 +4,7 @@
 #include <vector>
 
 // Custom
-#include <grasp_candidates_generator/grasp_candidates_generator.h>
+#include <grasp_candidates_generator/candidates_generator.h>
 #include <grasp_candidates_generator/hand_search.h>
 #include <grasp_candidates_generator/config_file.cpp>
 
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
   std::cout << "plot_normals: " << plot_normals << "\n";
 
   // Create object to generate grasp candidates.
-  GraspCandidatesGenerator::Parameters generator_params;
+  CandidatesGenerator::Parameters generator_params;
   generator_params.num_samples_ = num_samples;
   generator_params.num_threads_ = num_threads;
   generator_params.plot_normals_ = plot_normals;
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
   hand_search_params.num_samples_ = num_samples;
   hand_search_params.num_threads_ = num_threads;
   hand_search_params.rotation_axis_ = rotation_axis;
-  GraspCandidatesGenerator candidates_generator(generator_params, hand_search_params);
+  CandidatesGenerator candidates_generator(generator_params, hand_search_params);
 
   // Set the camera pose.
   Eigen::Matrix3Xd view_points(3,1);
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
   candidates_generator.preprocessPointCloud(cloud_cam);
 
   // Generate a list of grasp candidates.
-  std::vector<GraspHypothesis> candidates = candidates_generator.generateGraspCandidates(cloud_cam);
+  std::vector<Grasp> candidates = candidates_generator.generateGraspCandidates(cloud_cam);
 
   return 0;
 }

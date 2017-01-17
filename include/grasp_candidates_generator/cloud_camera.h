@@ -59,7 +59,8 @@ typedef pcl::PointCloud<pcl::PointNormal> PointCloudNormal;
  *
  * \brief A point cloud with camera sources and surface normals
  * 
- * This class stores a point cloud with camera sources and surface normals for each point in the point cloud.
+ * This class stores a point cloud with camera sources and surface normals for each point in the point cloud and the
+ * view point of the camera from which the cloud was observed.
  * 
 */
 class CloudCamera

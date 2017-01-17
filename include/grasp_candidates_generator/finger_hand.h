@@ -29,12 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #ifndef FINGER_HAND_H
 #define FINGER_HAND_H
 
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
+
 
 /** FingerHand class
  *

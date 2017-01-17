@@ -30,53 +30,76 @@
  */
 
 
-#ifndef FRAME_ESTIMATOR_H
-#define FRAME_ESTIMATOR_H
+#ifndef GRASP_CANDIDATES_GENERATOR_H
+#define GRASP_CANDIDATES_GENERATOR_H
 
 
+// System
 #include <vector>
 
-#include <Eigen/Dense>
 
-#include <pcl/kdtree/kdtree.h>
+// PCL
+#include <pcl/common/common.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
-#include <omp.h>
-
+// Custom
 #include <grasp_candidates_generator/cloud_camera.h>
-#include <grasp_candidates_generator/local_frame.h>
+#include <grasp_candidates_generator/grasp.h>
+#include <grasp_candidates_generator/grasp_set.h>
+#include <grasp_candidates_generator/hand_search.h>
+#include <grasp_candidates_generator/plot.h>
 
 
-typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
-
-
-/** FrameEstimator class
+/** CandidatesGenerator class
  *
- * \brief Estimate frames.
+ * \brief Generate grasp candidates.
  *
- * This class estimates local reference frames for point neighborhoods.
+ * This class generates grasp candidates by searching for possible robot hand placements in a point cloud.
  *
-*/
-class FrameEstimator
+ */
+class CandidatesGenerator
 {
   public:
 
-    FrameEstimator(int num_threads) : num_threads_(num_threads) { }
+    struct Parameters
+    {
+      bool plot_normals_;
+      bool plot_grasps_;
+      bool remove_statistical_outliers_;
+      bool voxelize_;
+      int num_samples_;
+      int num_threads_;
+      std::vector<double> workspace_;
+    };
 
-    std::vector<LocalFrame> calculateLocalFrames(const CloudCamera& cloud_cam, const std::vector<int>& indices,
-      double radius, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
+    CandidatesGenerator(const Parameters& params, const HandSearch::Parameters& hand_search_params);
 
-    std::vector<LocalFrame> calculateLocalFrames(const CloudCamera& cloud_cam, const Eigen::Matrix3Xd& samples,
-      double radius, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
+    ~CandidatesGenerator()
+    {
+      delete hand_search_;
+    }
 
-    LocalFrame* calculateFrame(const Eigen::Matrix3Xd& normals, const Eigen::Vector3d& sample, double radius,
-      const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
+    void preprocessPointCloud(CloudCamera& cloud_cam);
+
+    std::vector<Grasp> generateGraspCandidates(const CloudCamera& cloud_cam, bool use_samples = false);
+
+    std::vector<GraspSet> generateGraspCandidateSets(const CloudCamera& cloud_cam, bool use_samples = false);
+
+    void setNumSamples(int num_samples)
+    {
+      params_.num_samples_ = num_samples;
+    }
 
 
   private:
 
-    pcl::PointXYZRGBA eigenVectorToPcl(const Eigen::Vector3d& v) const;
+    HandSearch* hand_search_;
+    Plot plotter_;
 
-    int num_threads_;
+    Parameters params_;
 };
 
-#endif /* FRAME_ESTIMATOR_H */
+#endif /* GRASP_CANDIDATES_GENERATOR_H */

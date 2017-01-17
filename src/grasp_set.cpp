@@ -1,12 +1,12 @@
-#include <grasp_candidates_generator/hypothesis_set.h>
+#include <grasp_candidates_generator/grasp_set.h>
 
 
-const int HypothesisSet::ROTATION_AXIS_NORMAL = 0;
-const int HypothesisSet::ROTATION_AXIS_BINORMAL = 1;
-const int HypothesisSet::ROTATION_AXIS_CURVATURE_AXIS = 2;
+const int GraspSet::ROTATION_AXIS_NORMAL = 0;
+const int GraspSet::ROTATION_AXIS_BINORMAL = 1;
+const int GraspSet::ROTATION_AXIS_CURVATURE_AXIS = 2;
 
 
-HypothesisSet::HypothesisSet() : finger_width_(0.0), hand_outer_diameter_(0.0), hand_depth_(0.0), hand_height_(0.0),
+GraspSet::GraspSet() : finger_width_(0.0), hand_outer_diameter_(0.0), hand_depth_(0.0), hand_height_(0.0),
   init_bite_(0.0), rotation_axis_(-1)
 {
   sample_.setZero();
@@ -15,7 +15,7 @@ HypothesisSet::HypothesisSet() : finger_width_(0.0), hand_outer_diameter_(0.0), 
 }
 
 
-void HypothesisSet::evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame,
+void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame,
   const Eigen::VectorXd& angles)
 {
   hands_.resize(angles.size());
@@ -78,7 +78,7 @@ void HypothesisSet::evaluateHypotheses(const PointList& point_list, const LocalF
         }
 
         // create the grasp hypothesis
-        GraspHypothesis hand = createHypothesis(local_frame.getSample(), point_list_cropped, indices_closing,
+        Grasp hand = createHypothesis(local_frame.getSample(), point_list_cropped, indices_closing,
           frame_rot, finger_hand);
         hands_[i] = hand;
         is_valid_[i] = true;
@@ -88,7 +88,7 @@ void HypothesisSet::evaluateHypotheses(const PointList& point_list, const LocalF
 }
 
 
-Eigen::Matrix3Xd HypothesisSet::calculateShadow(const PointList& point_list, double shadow_length) const
+Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double shadow_length) const
 {
   double voxel_grid_size = 0.003; // voxel size for points that fill occluded region
 
@@ -155,7 +155,7 @@ Eigen::Matrix3Xd HypothesisSet::calculateShadow(const PointList& point_list, dou
 }
 
 
-Vector3iSet HypothesisSet::calculateVoxelizedShadow(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
+Vector3iSet GraspSet::calculateVoxelizedShadow(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
   int num_shadow_points, double voxel_grid_size) const
 {
   // Create generator for uniform random numbers.
@@ -179,7 +179,7 @@ Vector3iSet HypothesisSet::calculateVoxelizedShadow(const PointList& point_list,
 }
 
 
-Eigen::VectorXi HypothesisSet::floorVector(const Eigen::VectorXd& a) const
+Eigen::VectorXi GraspSet::floorVector(const Eigen::VectorXd& a) const
 {
   Eigen::VectorXi b(a.size());
 
@@ -192,7 +192,7 @@ Eigen::VectorXi HypothesisSet::floorVector(const Eigen::VectorXd& a) const
 }
 
 
-GraspHypothesis HypothesisSet::createHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
+Grasp GraspSet::createHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
   const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const
 {
   // extract data for classification
@@ -201,7 +201,7 @@ GraspHypothesis HypothesisSet::createHypothesis(const Eigen::Vector3d& sample, c
   // calculate grasp width (hand opening width)
   double width = point_list_learning.getPoints().row(0).maxCoeff() - point_list_learning.getPoints().row(0).minCoeff();
 
-  GraspHypothesis hand(sample, hand_frame, finger_hand, width);
+  Grasp hand(sample, hand_frame, finger_hand, width);
 
   // evaluate if the grasp is antipodal
   labelHypothesis(point_list, finger_hand, hand);
@@ -210,7 +210,7 @@ GraspHypothesis HypothesisSet::createHypothesis(const Eigen::Vector3d& sample, c
 }
 
 
-void HypothesisSet::labelHypothesis(const PointList& point_list, const FingerHand& finger_hand, GraspHypothesis& hand)
+void GraspSet::labelHypothesis(const PointList& point_list, const FingerHand& finger_hand, Grasp& hand)
   const
 {
   Antipodal antipodal;

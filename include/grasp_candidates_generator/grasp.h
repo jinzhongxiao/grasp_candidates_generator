@@ -30,8 +30,8 @@
  */
 
 
-#ifndef GRASP_HYPOTHESIS_H_
-#define GRASP_HYPOTHESIS_H_
+#ifndef GRASP_H_
+#define GRASP_H_
 
 
 // Boost
@@ -88,23 +88,23 @@ struct Configuration1D
  * This class stores a single grasp hypothesis.
  * 
  */
-class GraspHypothesis
+class Grasp
 {
 public:
 
   /**
    * \brief Default constructor.
    */
-  GraspHypothesis();
+  Grasp();
 
-  GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand,
+  Grasp(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand,
     double width);
 
-  GraspHypothesis(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand);
+  Grasp(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand);
 
   void construct(const FingerHand& finger_hand);
 
-  void writeHandsToFile(const std::string& filename, const std::vector<GraspHypothesis>& hands) const;
+  void writeHandsToFile(const std::string& filename, const std::vector<Grasp>& hands) const;
 
   /**
    * \brief Print a description of the grasp hypothesis to the systen's standard output.
@@ -307,4 +307,4 @@ protected:
   Configuration1D config_1d_; ///< position of fingers and base relative to local hand frame
 };
 
-#endif /* GRASP_HYPOTHESIS_H_ */
+#endif /* GRASP_H_ */

@@ -1,10 +1,10 @@
 #include <grasp_candidates_generator/plot.h>
 
 
-void Plot::plotFingers(const std::vector<HypothesisSet>& hand_set_list, const PointCloudRGBA::Ptr& cloud,
+void Plot::plotFingers(const std::vector<GraspSet>& hand_set_list, const PointCloudRGBA::Ptr& cloud,
   std::string str, double outer_diameter) const
 {
-  std::vector<GraspHypothesis> hands;
+  std::vector<Grasp> hands;
 
   for (int i = 0; i < hand_set_list.size(); i++)
   {
@@ -21,7 +21,7 @@ void Plot::plotFingers(const std::vector<HypothesisSet>& hand_set_list, const Po
 }
 
 
-void Plot::plotFingers(const std::vector<GraspHypothesis>& hand_list, const PointCloudRGBA::Ptr& cloud,
+void Plot::plotFingers(const std::vector<Grasp>& hand_list, const PointCloudRGBA::Ptr& cloud,
   std::string str, double outer_diameter) const
 {
   const int WIDTH = pcl::visualization::PCL_VISUALIZER_LINE_WIDTH;
@@ -43,7 +43,7 @@ void Plot::plotFingers(const std::vector<GraspHypothesis>& hand_list, const Poin
 }
 
 
-PointCloudRGBA::Ptr Plot::createFingersCloud(const std::vector<GraspHypothesis>& hand_list,
+PointCloudRGBA::Ptr Plot::createFingersCloud(const std::vector<Grasp>& hand_list,
   double outer_diameter) const
 {
   PointCloudRGBA::Ptr cloud_fingers(new PointCloudRGBA);
@@ -100,26 +100,6 @@ PointCloudRGBA::Ptr Plot::createFingersCloud(const std::vector<GraspHypothesis>&
   }
 
   return cloud_fingers;
-}
-
-
-void Plot::plotHands(const std::vector<GraspHypothesis>& hand_list,
-  const std::vector<GraspHypothesis>& antipodal_hand_list, const PointCloudRGBA::Ptr& cloud, std::string str,
-  bool use_grasp_bottom) const
-{
-  PointCloudNormal::Ptr hands_cloud = createNormalsCloud(hand_list, false, false);
-  PointCloudNormal::Ptr antipodal_hands_cloud = createNormalsCloud(antipodal_hand_list, true,
-    false);
-  plotHandsHelper(hands_cloud, antipodal_hands_cloud, cloud, str, use_grasp_bottom);
-}
-
-
-void Plot::plotHands(const std::vector<GraspHypothesis>& hand_list, const PointCloudRGBA::Ptr& cloud,
-  std::string str, bool use_grasp_bottom) const
-{
-  PointCloudNormal::Ptr hands_cloud = createNormalsCloud(hand_list, false, false);
-  PointCloudNormal::Ptr antipodal_hands_cloud = createNormalsCloud(hand_list, true, false);
-  plotHandsHelper(hands_cloud, antipodal_hands_cloud, cloud, str, use_grasp_bottom);
 }
 
 
@@ -259,43 +239,6 @@ void Plot::plotCameraSource(const Eigen::VectorXi& pts_cam_source_in, const Poin
 }
 
 
-PointCloudNormal::Ptr Plot::createNormalsCloud(const std::vector<GraspHypothesis>& hand_list,
-  bool plots_only_antipodal, bool plots_grasp_bottom) const
-{
-  PointCloudNormal::Ptr cloud(new PointCloudNormal);
-
-  for (int i = 0; i < hand_list.size(); i++)
-  {
-    Eigen::Matrix3Xd grasp_surface = hand_list[i].getGraspSurface();
-    Eigen::Matrix3Xd grasp_bottom = hand_list[i].getGraspBottom();
-    Eigen::Matrix3Xd hand_approach = hand_list[i].getApproach();
-
-    if (!plots_only_antipodal || (plots_only_antipodal && hand_list[i].isFullAntipodal()))
-    {
-      pcl::PointNormal p;
-      if (!plots_grasp_bottom)
-      {
-        p.x = grasp_surface(0);
-        p.y = grasp_surface(1);
-        p.z = grasp_surface(2);
-      }
-      else
-      {
-        p.x = grasp_bottom(0);
-        p.y = grasp_bottom(1);
-        p.z = grasp_bottom(2);
-      }
-      p.normal[0] = -hand_approach(0);
-      p.normal[1] = -hand_approach(1);
-      p.normal[2] = -hand_approach(2);
-      cloud->points.push_back(p);
-    }
-  }
-
-  return cloud;
-}
-
-
 void Plot::addCloudNormalsToViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewer,
   const PointCloudNormal::Ptr& cloud, double line_width, double* color_cloud,
   double* color_normals, const std::string& cloud_name, const std::string& normals_name) const
@@ -310,35 +253,6 @@ void Plot::addCloudNormalsToViewer(boost::shared_ptr<pcl::visualization::PCLVisu
     normals_name);
   viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, color_normals[0],
     color_normals[1], color_normals[2], normals_name);
-}
-
-
-void Plot::plotHandsHelper(const PointCloudNormal::Ptr& hands_cloud,
-  const PointCloudNormal::Ptr& antipodal_hands_cloud, const PointCloudRGBA::Ptr& cloud,
-  std::string str, bool use_grasp_bottom) const
-{
-  std::cout << "Drawing " << hands_cloud->size() << " grasps of which " << antipodal_hands_cloud->size()
-			  << " are antipodal grasps.\n";
-
-  std::string title = "Hands: " + str;
-  boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer(title);
-
-  pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> rgb(cloud);
-  viewer->addPointCloud<pcl::PointXYZRGBA>(cloud, rgb, "cloud");
-  viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "cloud");
-
-  double green[3] = { 0.0, 1.0, 0.0 };
-  double cyan[3] = { 0.0, 0.4, 0.8 };
-  addCloudNormalsToViewer(viewer, hands_cloud, 2, green, cyan, std::string("hands"), std::string("approaches"));
-
-  if (antipodal_hands_cloud->size() > 0)
-  {
-    double red[3] = { 1.0, 0.0, 0.0 };
-    addCloudNormalsToViewer(viewer, antipodal_hands_cloud, 2, green, red, std::string("antipodal_hands"),
-      std::string("antipodal_approaches"));
-  }
-
-  runViewer(viewer);
 }
 
 
@@ -357,39 +271,15 @@ void Plot::runViewer(boost::shared_ptr<pcl::visualization::PCLVisualizer>& viewe
 boost::shared_ptr<pcl::visualization::PCLVisualizer> Plot::createViewer(std::string title) const
 {
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer(title));  
-  //  viewer->initCameraParameters();
   viewer->setPosition(0, 0);
   viewer->setSize(640, 480);
   viewer->setBackgroundColor(1.0, 1.0, 1.0);
-
-  pcl::visualization::Camera camera;
-  camera.clip[0] = 0.00130783;
-  camera.clip[1] = 1.30783;
-  camera.focal[0] = 0.776838;
-  camera.focal[1] = -0.095644;
-  camera.focal[2] = -0.18991;
-  camera.pos[0] = 0.439149;
-  camera.pos[1] = -0.10342;
-  camera.pos[2] = 0.111626;
-  camera.view[0] = 0.666149;
-  camera.view[1] = -0.0276846;
-  camera.view[2] = 0.745305;
-  camera.fovy = 0.8575;
-  camera.window_pos[0] = 0;
-  camera.window_pos[1] = 0;
-  camera.window_size[0] = 640;
-  camera.window_size[1] = 480;
-
-  viewer->setCameraParameters(camera);
-  //  viewer->updateCamera();
-
-  // viewer->addCoordinateSystem(0.5, 0);
 
   return viewer;
 }
 
 
-void Plot::drawCloud(const PointCloudRGBA::Ptr& cloud_rgb, const std::string& title) const
+void Plot::plotCloud(const PointCloudRGBA::Ptr& cloud_rgb, const std::string& title) const
 {
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer(title);
   pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> rgb(cloud_rgb);
@@ -409,7 +299,7 @@ pcl::PointXYZRGBA Plot::eigenVector3dToPointXYZRGBA(const Eigen::Vector3d& v) co
 }
 
 
-void Plot::setPointColor(const GraspHypothesis& hand, pcl::PointXYZRGBA& p) const
+void Plot::setPointColor(const Grasp& hand, pcl::PointXYZRGBA& p) const
 {
   p.a = 0.5;
 

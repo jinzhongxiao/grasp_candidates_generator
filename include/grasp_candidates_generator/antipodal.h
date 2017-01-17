@@ -45,9 +45,9 @@
 
 /** Antipodal class
  *
- * \brief Check if a grasp is antipodal
+ * \brief Check if a grasp is antipodal.
  * 
- * This class checks if a grasp candidate satifies the antipodal condition.
+ * This class checks if a grasp candidate satisfies the antipodal condition.
  * 
 */
 class Antipodal

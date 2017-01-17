@@ -16,13 +16,13 @@ HandSearch::HandSearch(Parameters params) : params_(params), plots_samples_(fals
 }
 
 
-std::vector<HypothesisSet> HandSearch::searchHands(const CloudCamera& cloud_cam, int antipodal_mode,
+std::vector<GraspSet> HandSearch::searchHands(const CloudCamera& cloud_cam, int antipodal_mode,
   bool use_samples, bool forces_PSD, bool plots_normals, bool plots_samples) const
 {
   if (params_.rotation_axis_ < 0 || params_.rotation_axis_ > 2)
   {
     std::cout << "Parameter <rotation_axis> is not set correctly!\n";
-    std::vector<HypothesisSet> empty(0);
+    std::vector<GraspSet> empty(0);
     return empty;
   }
 
@@ -67,7 +67,7 @@ std::vector<HypothesisSet> HandSearch::searchHands(const CloudCamera& cloud_cam,
 
   // 2. Evaluate possible hand placements.
   std::cout << "Finding hand poses ...\n";
-  std::vector<HypothesisSet> hypothesis_set_list = evaluateHands(cloud_cam, frames, kdtree);
+  std::vector<GraspSet> hypothesis_set_list = evaluateHands(cloud_cam, frames, kdtree);
 
   std::cout << "====> HAND SEARCH TIME: " << omp_get_wtime() - t0_total << std::endl;
 
@@ -75,8 +75,8 @@ std::vector<HypothesisSet> HandSearch::searchHands(const CloudCamera& cloud_cam,
 }
 
 
-std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera& cloud_cam,
-  const std::vector<GraspHypothesis>& grasps, bool plot_samples) const
+std::vector<Grasp> HandSearch::reevaluateHypotheses(const CloudCamera& cloud_cam,
+  const std::vector<Grasp>& grasps, bool plot_samples) const
 {
   // create KdTree for neighborhood search
   const Eigen::MatrixXi& camera_source = cloud_cam.getCameraSource();
@@ -135,7 +135,7 @@ std::vector<GraspHypothesis> HandSearch::reevaluateHypotheses(const CloudCamera&
   }
 
   // remove empty list elements
-  std::vector<GraspHypothesis> grasps_out;
+  std::vector<Grasp> grasps_out;
   for (std::size_t i = 0; i < labels.size(); i++)
   {
     grasps_out.push_back(grasps[i]);
@@ -158,7 +158,7 @@ pcl::PointXYZRGBA HandSearch::eigenVectorToPcl(const Eigen::Vector3d& v) const
 }
 
 
-std::vector<HypothesisSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam,
+std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam,
   const std::vector<LocalFrame>& frames, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const
 {
   double t1 = omp_get_wtime();
@@ -171,10 +171,10 @@ std::vector<HypothesisSet> HandSearch::evaluateHands(const CloudCamera& cloud_ca
   std::vector<float> nn_dists;
   const PointCloudRGB::Ptr& cloud = cloud_cam.getCloudProcessed();
   Eigen::Matrix3Xd points = cloud->getMatrixXfMap().block(0, 0, 3, cloud->size()).cast<double>();
-  std::vector<HypothesisSet> hand_set_list(frames.size());
+  std::vector<GraspSet> hand_set_list(frames.size());
   PointList point_list(points, cloud_cam.getNormals(), cloud_cam.getCameraSource(), cloud_cam.getViewPoints());
   PointList nn_points;
-  HypothesisSet hand_set(params_.finger_width_, params_.hand_outer_diameter_, params_.hand_depth_,
+  GraspSet hand_set(params_.finger_width_, params_.hand_outer_diameter_, params_.hand_depth_,
     params_.hand_height_, params_.init_bite_, params_.rotation_axis_);
 
 #ifdef _OPENMP // parallelization using OpenMP
@@ -199,7 +199,7 @@ std::vector<HypothesisSet> HandSearch::evaluateHands(const CloudCamera& cloud_ca
   }
 
   // concatenate the grasp lists
-  std::vector<HypothesisSet> hand_set_list_out;
+  std::vector<GraspSet> hand_set_list_out;
   for (std::size_t i = 0; i < hand_set_list.size(); i++)
   {
     if (hand_set_list[i].getHypotheses().size() > 0)
@@ -215,7 +215,7 @@ std::vector<HypothesisSet> HandSearch::evaluateHands(const CloudCamera& cloud_ca
 }
 
 
-bool HandSearch::reevaluateHypothesis(const PointList& point_list, const GraspHypothesis& hand,
+bool HandSearch::reevaluateHypothesis(const PointList& point_list, const Grasp& hand,
   FingerHand& finger_hand, PointList& point_list_cropped) const
 {
   // Transform points into hand frame and crop them on <hand_height>.

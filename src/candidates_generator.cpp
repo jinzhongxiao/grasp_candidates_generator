@@ -1,14 +1,14 @@
-#include <grasp_candidates_generator/grasp_candidates_generator.h>
+#include <grasp_candidates_generator/candidates_generator.h>
 
 
-GraspCandidatesGenerator::GraspCandidatesGenerator(const Parameters& params,
+CandidatesGenerator::CandidatesGenerator(const Parameters& params,
   const HandSearch::Parameters& hand_search_params) : params_(params)
 {
   hand_search_ = new HandSearch(hand_search_params);
 }
 
 
-void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
+void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 {
   const double VOXEL_SIZE = 0.003;
 
@@ -106,14 +106,14 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 }
 
 
-std::vector<GraspHypothesis> GraspCandidatesGenerator::generateGraspCandidates(const CloudCamera& cloud_cam,
+std::vector<Grasp> CandidatesGenerator::generateGraspCandidates(const CloudCamera& cloud_cam,
   bool use_samples)
 {
   // Find sets of grasp candidates.
-  std::vector<HypothesisSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
+  std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
 
   // Extract the grasp candidates.
-  std::vector<GraspHypothesis> candidates;
+  std::vector<Grasp> candidates;
   for (int i = 0; i < hand_set_list.size(); i++)
   {
     candidates.insert(candidates.end(), hand_set_list[i].getHypotheses().begin(),
@@ -130,11 +130,11 @@ std::vector<GraspHypothesis> GraspCandidatesGenerator::generateGraspCandidates(c
 }
 
 
-std::vector<HypothesisSet> GraspCandidatesGenerator::generateGraspCandidateSets(const CloudCamera& cloud_cam,
+std::vector<GraspSet> CandidatesGenerator::generateGraspCandidateSets(const CloudCamera& cloud_cam,
   bool use_samples)
 {
   // Find sets of grasp candidates.
-  std::vector<HypothesisSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
+  std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
 
   if (params_.plot_grasps_)
   {
