@@ -190,6 +190,7 @@ std::vector<HypothesisSet> HandSearch::evaluateHands(const CloudCamera& cloud_ca
       nn_points.setPoints(nn_points.getPoints() - frames[i].getSample().replicate(1, nn_points.size()));
 
       hand_set.evaluateHypotheses(nn_points, frames[i], angles);
+
       if (hand_set.getHypotheses().size() > 0)
       {
         hand_set_list[i] = hand_set;

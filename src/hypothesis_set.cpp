@@ -16,7 +16,7 @@ HypothesisSet::HypothesisSet() : finger_width_(0.0), hand_outer_diameter_(0.0), 
 void HypothesisSet::evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame,
   const Eigen::VectorXd& angles)
 {
-  hands_.resize(0);
+  hands_.resize(angles.size());
   sample_ = local_frame.getSample();
 
   FingerHand finger_hand(finger_width_, hand_outer_diameter_, hand_depth_);
@@ -77,7 +77,7 @@ void HypothesisSet::evaluateHypotheses(const PointList& point_list, const LocalF
         // create the grasp hypothesis
         GraspHypothesis hand = createHypothesis(local_frame.getSample(), point_list_cropped, indices_closing,
           frame_rot, finger_hand);
-        hands_.push_back(hand);
+        hands_[i] = hand;
       }
     }
   }
