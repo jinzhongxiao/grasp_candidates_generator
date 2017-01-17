@@ -1,6 +1,20 @@
 #include <grasp_candidates_generator/plot.h>
 
 
+void Plot::plotFingers(const std::vector<HypothesisSet>& hand_set_list, const PointCloudRGBA::Ptr& cloud,
+  std::string str, double outer_diameter) const
+{
+  std::vector<GraspHypothesis> hands;
+
+  for (int i = 0; i < hand_set_list.size(); i++)
+  {
+    hands.insert(hands.end(), hand_set_list[i].getHypotheses().begin(), hand_set_list[i].getHypotheses().end());
+  }
+
+  plotFingers(hands, cloud, str, outer_diameter);
+}
+
+
 void Plot::plotFingers(const std::vector<GraspHypothesis>& hand_list, const PointCloudRGBA::Ptr& cloud,
   std::string str, double outer_diameter) const
 {

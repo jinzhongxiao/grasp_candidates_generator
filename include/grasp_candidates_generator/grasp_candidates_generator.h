@@ -15,6 +15,8 @@
 
 // Custom
 #include <grasp_candidates_generator/cloud_camera.h>
+#include <grasp_candidates_generator/grasp_hypothesis.h>
+#include <grasp_candidates_generator/hypothesis_set.h>
 #include <grasp_candidates_generator/hand_search.h>
 #include <grasp_candidates_generator/plot.h>
 
@@ -36,9 +38,16 @@ class GraspCandidatesGenerator
 
     GraspCandidatesGenerator(const Parameters& params, const HandSearch::Parameters& hand_search_params);
 
+    ~GraspCandidatesGenerator()
+    {
+      delete hand_search_;
+    }
+
     void preprocessPointCloud(CloudCamera& cloud_cam);
 
     std::vector<GraspHypothesis> generateGraspCandidates(const CloudCamera& cloud_cam, bool use_samples = false);
+
+    std::vector<HypothesisSet> generateGraspCandidateSets(const CloudCamera& cloud_cam, bool use_samples = false);
 
     void setNumSamples(int num_samples)
     {
@@ -48,7 +57,7 @@ class GraspCandidatesGenerator
 
   private:
 
-    HandSearch hand_search_;
+    HandSearch* hand_search_;
     Plot plotter_;
 
     Parameters params_;

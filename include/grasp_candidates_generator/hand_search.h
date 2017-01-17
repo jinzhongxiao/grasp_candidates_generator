@@ -48,6 +48,7 @@
 #include <grasp_candidates_generator/finger_hand.h>
 #include <grasp_candidates_generator/frame_estimator.h>
 #include <grasp_candidates_generator/grasp_hypothesis.h>
+#include <grasp_candidates_generator/hypothesis_set.h>
 #include <grasp_candidates_generator/local_frame.h>
 #include <grasp_candidates_generator/plot.h>
 #include <grasp_candidates_generator/point_list.h>
@@ -93,14 +94,9 @@ public:
     double init_bite_; ///< the minimum object height
   };
 
-  HandSearch() : plots_samples_(false), plots_local_axes_(false), plots_camera_sources_(false)
-  { }
+  HandSearch(Parameters params);
 
-  HandSearch(Parameters params) : params_(params), plots_samples_(false), plots_local_axes_(false),
-    plots_camera_sources_(false)
-  { }
-
-  std::vector<GraspHypothesis> generateHypotheses(const CloudCamera& cloud_cam, int antipodal_mode, bool use_samples,
+  std::vector<HypothesisSet> searchHands(const CloudCamera& cloud_cam, int antipodal_mode, bool use_samples,
     bool forces_PSD = false, bool plots_normals = false, bool plots_samples = false) const;
 
   std::vector<GraspHypothesis> reevaluateHypotheses(const CloudCamera& cloud_cam,
@@ -114,25 +110,19 @@ public:
 
 private:
 
-  std::vector<GraspHypothesis> evaluateHands(const CloudCamera& cloud_cam, const std::vector<LocalFrame>& frames,
+  std::vector<HypothesisSet> evaluateHands(const CloudCamera& cloud_cam, const std::vector<LocalFrame>& frames,
     const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
-
-  std::vector<GraspHypothesis> evaluateHand(const pcl::PointXYZRGBA& sample, const PointList& point_list,
-    const LocalFrame& local_frame, const Eigen::VectorXd& angles) const;
 
   bool reevaluateHypothesis(const PointList& point_list, const GraspHypothesis& hand, FingerHand& finger_hand,
     PointList& point_list_cropped) const;
 
   int labelHypothesis(const PointList& point_list, FingerHand& finger_hand) const;
 
-  PointList cropByHandHeight(const PointList& points_in, double height, int dim = 2) const;
-
   pcl::PointXYZRGBA eigenVectorToPcl(const Eigen::Vector3d& v) const;
 
-  GraspHypothesis createGraspHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
-    const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const;
-
   Parameters params_; ///< parameters for the hand search
+
+  double nn_radius_; ///< radius for nearest neighbors search
 
   Eigen::Matrix3Xd cloud_normals_; ///< a 3xn matrix containing the normals for points in the point cloud
   Plot plot_; ///< plot object for visualization of search results

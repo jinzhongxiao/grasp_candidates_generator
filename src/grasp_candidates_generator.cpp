@@ -4,7 +4,7 @@
 GraspCandidatesGenerator::GraspCandidatesGenerator(const Parameters& params,
   const HandSearch::Parameters& hand_search_params) : params_(params)
 {
-  hand_search_.setParameters(hand_search_params);
+  hand_search_ = new HandSearch(hand_search_params);
 }
 
 
@@ -36,7 +36,7 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
     //    plotter.drawCloud(cloud_cam.getCloudProcessed(), "after");
   }
 
-  // no indices into point cloud given
+  // No indices into point cloud given
   if (cloud_cam.getSampleIndices().size() == 0)
   {
     // 1. Workspace filtering
@@ -76,7 +76,7 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
       std::cout << "Subsampled " << params_.num_samples_ << " at random uniformly.\n";
     }
   }
-  // indices into point cloud given
+  // Indices into point cloud given
   else
   {
     if (params_.num_samples_ > 0 && params_.num_samples_ < cloud_cam.getSampleIndices().size())
@@ -109,7 +109,16 @@ void GraspCandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 std::vector<GraspHypothesis> GraspCandidatesGenerator::generateGraspCandidates(const CloudCamera& cloud_cam,
   bool use_samples)
 {
-  std::vector<GraspHypothesis> candidates = hand_search_.generateHypotheses(cloud_cam, 0, use_samples);
+  // Find sets of grasp candidates.
+  std::vector<HypothesisSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
+
+  // Extract the grasp candidates.
+  std::vector<GraspHypothesis> candidates;
+  for (int i = 0; i < hand_set_list.size(); i++)
+  {
+    candidates.insert(candidates.end(), hand_set_list[i].getHypotheses().begin(),
+      hand_set_list[i].getHypotheses().end());
+  }
   std::cout << "Generated " << candidates.size() << " grasp candidates.\n";
 
   if (params_.plot_grasps_)
@@ -118,4 +127,19 @@ std::vector<GraspHypothesis> GraspCandidatesGenerator::generateGraspCandidates(c
   }
 
   return candidates;
+}
+
+
+std::vector<HypothesisSet> GraspCandidatesGenerator::generateGraspCandidateSets(const CloudCamera& cloud_cam,
+  bool use_samples)
+{
+  // Find sets of grasp candidates.
+  std::vector<HypothesisSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
+
+  if (params_.plot_grasps_)
+  {
+    plotter_.plotFingers(hand_set_list, cloud_cam.getCloudOriginal(), "Grasp Candidates");
+  }
+
+  return hand_set_list;
 }

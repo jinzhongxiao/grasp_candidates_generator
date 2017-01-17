@@ -61,6 +61,8 @@ class PointList
 
     PointList rotatePointList(const Eigen::Matrix3d& rotation) const;
 
+    PointList cropByHandHeight(double height, int dim = 2) const;
+
     const Eigen::MatrixXi& getCamSource() const
     {
       return cam_source_;

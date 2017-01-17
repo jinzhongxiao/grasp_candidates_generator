@@ -37,6 +37,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 
 #include <grasp_candidates_generator/grasp_hypothesis.h>
+#include <grasp_candidates_generator/hypothesis_set.h>
 #include <grasp_candidates_generator/local_frame.h>
 
 
@@ -53,6 +54,9 @@ typedef pcl::PointCloud<pcl::PointNormal> PointCloudNormal;
 class Plot
 {
 	public:
+
+    void plotFingers(const std::vector<HypothesisSet>& hand_set_list, const PointCloudRGBA::Ptr& cloud,
+      std::string str, double outer_diameter = 0.09) const;
 
     void plotFingers(const std::vector<GraspHypothesis>& hand_list, const PointCloudRGBA::Ptr& cloud, std::string str,
       double outer_diameter = 0.09) const;

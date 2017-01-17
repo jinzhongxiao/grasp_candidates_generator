@@ -28,6 +28,7 @@ add_library(finger_hand src/finger_hand.cpp)
 add_library(frame_estimator src/frame_estimator.cpp)
 add_library(grasp_hypothesis src/grasp_hypothesis.cpp)
 add_library(hand_search src/hand_search.cpp)
+add_library(hypothesis_set src/hypothesis_set.cpp)
 add_library(local_frame src/local_frame.cpp)
 add_library(plot src/plot.cpp)
 add_library(point_list src/point_list.cpp)
@@ -41,12 +42,13 @@ target_link_libraries(antipodal point_list)
 target_link_libraries(cloud_camera ${PCL_LIBRARIES})
 target_link_libraries(frame_estimator cloud_camera local_frame ${PCL_LIBRARIES})
 target_link_libraries(grasp_hypothesis finger_hand)
-target_link_libraries(hand_search antipodal cloud_camera finger_hand frame_estimator grasp_hypothesis local_frame plot 
-  point_list ${PCL_LIBRARIES})
-target_link_libraries(local_frame ${PCL_LIBRARIES})
+target_link_libraries(hand_search antipodal cloud_camera finger_hand frame_estimator grasp_hypothesis hypothesis_set 
+  local_frame plot point_list ${PCL_LIBRARIES})
+target_link_libraries(hypothesis_set antipodal finger_hand grasp_hypothesis local_frame point_list)
 target_link_libraries(local_frame ${PCL_LIBRARIES})
 target_link_libraries(plot grasp_hypothesis local_frame ${PCL_LIBRARIES})
-target_link_libraries(grasp_candidates_generator cloud_camera hand_search plot ${PCL_LIBRARIES})
+target_link_libraries(grasp_candidates_generator cloud_camera grasp_hypothesis hypothesis_set hand_search plot 
+  ${PCL_LIBRARIES})
 
 # Set the location for library installation (/usr/lib in this case is not really necessary)
 # Use "sudo make install" to apply

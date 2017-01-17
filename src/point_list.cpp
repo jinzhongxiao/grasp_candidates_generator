@@ -58,3 +58,20 @@ PointList PointList::rotatePointList(const Eigen::Matrix3d& rotation) const
 {
   return PointList(rotation * points_, rotation * normals_, cam_source_, view_points_);
 }
+
+
+PointList PointList::cropByHandHeight(double height, int dim) const
+{
+  std::vector<int> indices(size());
+  int k = 0;
+  for (int i = 0; i < size(); i++)
+  {
+    if (points_(dim, i) > -1.0 * height && points_(dim, i) < height)
+    {
+      indices[k] = i;
+      k++;
+    }
+  }
+
+  return sliceMatrix(indices);
+}
