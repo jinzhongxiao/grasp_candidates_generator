@@ -42,32 +42,6 @@
 #include <typeinfo>
 
 
-class Convert
-{
-  public:
-    template <typename T>
-    static std::string T_to_string(T const &val)
-    {
-      std::ostringstream ostr;
-      ostr << val;
-
-      return ostr.str();
-    }
-
-    // Convert string to T.
-    template <typename T>
-    static T string_to_T(std::string const &val)
-    {
-      std::istringstream istr(val);
-      T returnVal;
-      if (!(istr >> returnVal))
-        std::cout << "CFG: Not a valid " + (std::string)typeid(T).name() + " received!\n";
-
-      return returnVal;
-    }
-};
-
-
 class ConfigFile
 {
   public:
@@ -76,10 +50,39 @@ class ConfigFile
 
     bool keyExists(const std::string &key) const;
 
+    // template <typename ValueType>
+    // ValueType getValueOfKey(const std::string &key, ValueType const &defaultValue = ValueType()) const;
+    
     template <typename ValueType>
-    ValueType getValueOfKey(const std::string &key, ValueType const &defaultValue = ValueType()) const;
+    ValueType getValueOfKey(const std::string &key, ValueType const &defaultValue) const
+    {
+      if (!keyExists(key))
+        return defaultValue;
+
+      return string_to_T<ValueType>(contents.find(key)->second);
+    }
 
     std::string getValueOfKeyAsString(const std::string &key, const std::string &defaultValue);
+    
+    template <typename T>
+    std::string T_to_string(T const &val) const
+    {
+      std::ostringstream ostr;
+      ostr << val;
+
+      return ostr.str();
+    }
+    
+    template <typename T>
+    T string_to_T(std::string const &val) const
+    {
+      std::istringstream istr(val);
+      T returnVal;
+      if (!(istr >> returnVal))
+        std::cout << "CFG: Not a valid " + (std::string)typeid(T).name() + " received!\n";
+
+      return returnVal;
+    }
 
 
   private:

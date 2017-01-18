@@ -65,10 +65,10 @@ void ConfigFile::extractContents(const std::string &line)
 void ConfigFile::parseLine(const std::string &line, size_t const lineNo)
 {
   if (line.find('=') == line.npos)
-    std::cout << "CFG: Couldn't find separator on line: " + Convert::T_to_string(lineNo) + "\n";
+    std::cout << "CFG: Couldn't find separator on line: " + T_to_string(lineNo) + "\n";
 
   if (!validLine(line))
-    std::cout << "CFG: Bad format for line: " + Convert::T_to_string(lineNo) + "\n";
+    std::cout << "CFG: Bad format for line: " + T_to_string(lineNo) + "\n";
 
   extractContents(line);
 }
@@ -112,16 +112,6 @@ ConfigFile::ConfigFile(const std::string &fName)
 bool ConfigFile::keyExists(const std::string &key) const
 {
   return contents.find(key) != contents.end();
-}
-
-
-template <typename ValueType>
-ValueType ConfigFile::getValueOfKey(const std::string &key, ValueType const &defaultValue) const
-{
-  if (!keyExists(key))
-    return defaultValue;
-
-  return Convert::string_to_T<ValueType>(contents.find(key)->second);
 }
 
 

@@ -35,7 +35,7 @@ add_library(point_list src/point_list.cpp)
 
 # This executable is for testing the shared library
 add_executable(generate_candidates src/generate_candidates.cpp)
-target_link_libraries(generate_candidates grasp_candidates_generator hand_search ${PCL_LIBRARIES})
+target_link_libraries(generate_candidates config_file grasp_candidates_generator hand_search ${PCL_LIBRARIES})
 
 # Linking for libraries
 target_link_libraries(antipodal point_list)
