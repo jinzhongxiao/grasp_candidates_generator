@@ -55,22 +55,7 @@
 #include <grasp_candidates_generator/point_list.h>
 
 
-// The operator and the hash function below are necessary for boost's unordered set.
-
-//bool operator ==(const Eigen::Vector3i& a, const Eigen::Vector3i& b)
-//{
-//  if (a(0) < b(0)) return true;
-//
-//  if (b(0) < a(0)) return false;
-//
-//  if (a(1) < b(1)) return true;
-//
-//  if (b(1) < a(1)) return false;
-//
-//  return a(2) < b(2);
-//}
-
-
+// The hash function below is necessary for boost's unordered set.
 namespace boost
 {
 template <>
@@ -98,14 +83,29 @@ class GraspSet
 {
   public:
 
+    /** robot hand geometry */
+    struct HandGeometry
+    {
+      double finger_width_; ///< the width of the robot hand fingers
+      double outer_diameter_; ///< the maximum robot hand aperture
+      double depth_; ///< the hand depth (length of fingers)
+      double height_; ///< the hand extends plus/minus this value along the hand axis
+      double init_bite_; ///< the minimum object height
+
+      HandGeometry() : finger_width_(0.0), outer_diameter_(0.0), depth_(0.0), height_(0.0), init_bite_(0.0) { }
+
+      HandGeometry(double finger_width, double outer_diameter, double hand_depth, double hand_height,
+        double init_bite)
+        : finger_width_(finger_width), outer_diameter_(outer_diameter), depth_(hand_depth),
+          height_(hand_height), init_bite_(init_bite) {  }
+    };
+
     GraspSet();
 
-    GraspSet(double finger_width, double hand_outer_diameter, double hand_depth, double hand_height,
-      double init_bite, int rotation_axis)
-      : finger_width_(finger_width), hand_outer_diameter_(hand_outer_diameter), hand_depth_(hand_depth),
-        hand_height_(hand_height), init_bite_(init_bite), rotation_axis_(rotation_axis) { }
+    GraspSet(const HandGeometry& hand_geometry, const Eigen::VectorXd& angles, int rotation_axis)
+      : hand_geometry_(hand_geometry), angles_(angles), rotation_axis_(rotation_axis) { }
 
-    void evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame, const Eigen::VectorXd& angles);
+    void evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame);
 
     Eigen::Matrix3Xd calculateShadow(const PointList& point_list, double shadow_length) const;
 
@@ -160,14 +160,9 @@ class GraspSet
     Eigen::Vector3d sample_;
     std::vector<Grasp> hands_;
     Eigen::Array<bool, 1, Eigen::Dynamic> is_valid_;
+    Eigen::VectorXd angles_; ///< the hand orientations to consider in the local search
 
-    /** robot hand geometry */
-    double finger_width_; ///< the width of the robot hand fingers
-    double hand_outer_diameter_; ///< the maximum robot hand aperture
-    double hand_depth_; ///< the hand depth (length of fingers)
-    double hand_height_; ///< the hand extends plus/minus this value along the hand axis
-    double init_bite_; ///< the minimum object height
-
+    HandGeometry hand_geometry_; ///< the robot hand geometry
     int rotation_axis_; ///< the axis about which the hand frame is rotated to generate different orientations
 
     /** constants for rotation axis */

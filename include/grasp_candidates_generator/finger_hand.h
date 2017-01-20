@@ -127,24 +127,6 @@ public:
     return fingers_;
   }
 	
-	/**
-	 * \brief Return the width of the object contained in the grasp.
-	 * \return the width of the object contained in the grasp
-	*/
-  double getGraspWidth() const
-  {
-    return grasp_width_;
-  }
-	
-	/**
-	 * \brief Return where the back of the hand is.
-	 * \return the back of the hand
-	*/
-  double getBackOfHand() const
-  {
-    return back_of_hand_;
-  }
-
   /**
    * \brief Return where the bottom of the hand is.
    * \return the bottom of the hand
@@ -247,12 +229,7 @@ private:
   int lateral_axis_; ///< the index of the vertical axis in the hand frame (closing direction of the robot hand)
 
   double finger_width_; ///< the width of the robot hand fingers
-  double hand_outer_diameter_; ///< the maximum aperture of the robot hand (includes finger width)
   double hand_depth_; ///< the hand depth (finger length)
-
-  double back_of_hand_; ///< where the back of the hand is (distance from back to position between finger tip ends)
-
-  double grasp_width_; ///< the width of the object contained in the grasp
 
   Eigen::VectorXd finger_spacing_; ///< the possible finger placements
   Eigen::Array<bool, 1, Eigen::Dynamic> fingers_; ///< indicates the feasible finger placements

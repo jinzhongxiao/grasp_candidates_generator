@@ -51,7 +51,7 @@ class PointList
 
     PointList(int size, int num_cams);
 
-    PointList sliceMatrix(const std::vector<int>& indices) const;
+    PointList slice(const std::vector<int>& indices) const;
 
     Eigen::Matrix3Xd sliceMatrix(const Eigen::Matrix3Xd& mat, const std::vector<int>& indices) const;
 

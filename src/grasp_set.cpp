@@ -6,59 +6,58 @@ const int GraspSet::ROTATION_AXIS_BINORMAL = 1;
 const int GraspSet::ROTATION_AXIS_CURVATURE_AXIS = 2;
 
 
-GraspSet::GraspSet() : finger_width_(0.0), hand_outer_diameter_(0.0), hand_depth_(0.0), hand_height_(0.0),
-  init_bite_(0.0), rotation_axis_(-1)
+GraspSet::GraspSet() : rotation_axis_(-1)
 {
   sample_.setZero();
   hands_.resize(0);
   is_valid_.resize(0);
+  angles_.resize(0);
 }
 
 
-void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame,
-  const Eigen::VectorXd& angles)
+void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame)
 {
-  hands_.resize(angles.size());
+  hands_.resize(angles_.size());
   sample_ = local_frame.getSample();
-  is_valid_ = Eigen::Array<bool, 1, Eigen::Dynamic>::Constant(1, angles.size(), false);
+  is_valid_ = Eigen::Array<bool, 1, Eigen::Dynamic>::Constant(1, angles_.size(), false);
 
-  FingerHand finger_hand(finger_width_, hand_outer_diameter_, hand_depth_);
+  FingerHand finger_hand(hand_geometry_.finger_width_, hand_geometry_.outer_diameter_, hand_geometry_.depth_);
+  Eigen::Matrix3d rot_binormal;
 
   // Set the lateral and forward axis of the robot hand frame (closing direction and grasp approach direction).
   if (rotation_axis_ == ROTATION_AXIS_CURVATURE_AXIS)
   {
     finger_hand.setLateralAxis(1);
     finger_hand.setForwardAxis(0);
-  }
 
-  // Rotation about binormal by 180 degrees (reverses direction of normal)
-  Eigen::Matrix3d rot_binormal;
-  rot_binormal <<  -1.0,  0.0,  0.0,
-                    0.0,  1.0,  0.0,
-                    0.0,  0.0, -1.0;
+    // Rotation about binormal by 180 degrees (reverses direction of normal)
+    rot_binormal <<  -1.0,  0.0,  0.0,
+                      0.0,  1.0,  0.0,
+                      0.0,  0.0, -1.0;
+  }
 
   // Local reference frame
   Eigen::Matrix3d local_frame_mat;
   local_frame_mat << local_frame.getNormal(), local_frame.getBinormal(), local_frame.getCurvatureAxis();
 
   // Evaluate grasp at each hand orientation.
-  for (int i = 0; i < angles.rows(); i++)
+  for (int i = 0; i < angles_.rows(); i++)
   {
-    // Rotation about curvature axis by <angles(i)> radians
+    // Rotation about curvature axis by <angles_(i)> radians
     Eigen::Matrix3d rot;
-    rot <<  cos(angles(i)),  -1.0 * sin(angles(i)),  0.0,
-            sin(angles(i)),  cos(angles(i)),         0.0,
-            0.0,             0.0,                    1.0;
+    rot <<  cos(angles_(i)),  -1.0 * sin(angles_(i)),   0.0,
+            sin(angles_(i)),  cos(angles_(i)),          0.0,
+            0.0,              0.0,                      1.0;
 
     // Rotate points into this hand orientation.
     Eigen::Matrix3d frame_rot = local_frame_mat * rot_binormal * rot;
     PointList point_list_frame = point_list.rotatePointList(frame_rot.transpose());
 
     // Crop points on hand height.
-    PointList point_list_cropped = point_list_frame.cropByHandHeight(hand_height_);
+    PointList point_list_cropped = point_list_frame.cropByHandHeight(hand_geometry_.height_);
 
     // Evaluate finger placements for this orientation.
-    finger_hand.evaluateFingers(point_list_cropped.getPoints(), init_bite_);
+    finger_hand.evaluateFingers(point_list_cropped.getPoints(), hand_geometry_.init_bite_);
 
     // Check that there are at least two corresponding finger placements.
     if (finger_hand.getFingers().cast<int>().sum() >= 2)
@@ -68,7 +67,7 @@ void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame&
       if (finger_hand.getHand().cast<int>().sum() > 0)
       {
         // Try to move the hand as deep as possible onto the object.
-        finger_hand.deepenHand(point_list_cropped.getPoints(), init_bite_, hand_depth_);
+        finger_hand.deepenHand(point_list_cropped.getPoints(), hand_geometry_.init_bite_, hand_geometry_.depth_);
 
         // Calculate points in the closing region of the hand.
         std::vector<int> indices_closing = finger_hand.computePointsInClosingRegion(point_list_cropped.getPoints());
@@ -78,8 +77,8 @@ void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame&
         }
 
         // create the grasp hypothesis
-        Grasp hand = createHypothesis(local_frame.getSample(), point_list_cropped, indices_closing,
-          frame_rot, finger_hand);
+        Grasp hand = createHypothesis(local_frame.getSample(), point_list_cropped, indices_closing, frame_rot,
+          finger_hand);
         hands_[i] = hand;
         is_valid_[i] = true;
       }
@@ -196,7 +195,7 @@ Grasp GraspSet::createHypothesis(const Eigen::Vector3d& sample, const PointList&
   const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const
 {
   // extract data for classification
-  PointList point_list_learning = point_list.sliceMatrix(indices_learning);
+  PointList point_list_learning = point_list.slice(indices_learning);
 
   // calculate grasp width (hand opening width)
   double width = point_list_learning.getPoints().row(0).maxCoeff() - point_list_learning.getPoints().row(0).minCoeff();

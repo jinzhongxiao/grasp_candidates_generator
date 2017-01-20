@@ -2,7 +2,7 @@
 
 
 FingerHand::FingerHand(double finger_width, double hand_outer_diameter,	double hand_depth)
-  :	finger_width_(finger_width), hand_outer_diameter_(hand_outer_diameter), hand_depth_(hand_depth),	lateral_axis_(-1),
+  :	finger_width_(finger_width), hand_depth_(hand_depth),	lateral_axis_(-1),
    	forward_axis_(-1)
 {
 	int n = 10; // number of finger placements to consider over a single hand diameter
@@ -10,7 +10,7 @@ FingerHand::FingerHand(double finger_width, double hand_outer_diameter,	double h
 	Eigen::VectorXd fs_half;
 	fs_half.setLinSpaced(n, 0.0, hand_outer_diameter - finger_width);
 	finger_spacing_.resize(2 * fs_half.size());
-	finger_spacing_	<< (fs_half.array() - hand_outer_diameter_ + finger_width_).matrix(), fs_half;
+	finger_spacing_	<< (fs_half.array() - hand_outer_diameter + finger_width_).matrix(), fs_half;
 	fingers_ = Eigen::Array<bool, 1, Eigen::Dynamic>::Constant(1, 2 * n, false);
 
 	hand_.resize(1, fingers_.size() / 2);
@@ -81,7 +81,6 @@ void FingerHand::evaluateFingers(const Eigen::Matrix3Xd& points, double bite, in
       }
     }
   }
-//  std::cout << "evalGrasps() -- fingers_: " << fingers_ << "\n";
 }
 
 
@@ -100,9 +99,6 @@ void FingerHand::deepenHand(const Eigen::Matrix3Xd& points, double min_depth, do
 
   // choose middle hand
   int hand_eroded_idx = hand_idx[ceil(hand_idx.size() / 2.0) - 1]; // middle index
-  Eigen::Array<bool, 1, Eigen::Dynamic> hand_eroded;
-  hand_eroded = Eigen::Array<bool, 1,Eigen::Dynamic>::Constant(hand_.cols(), false);
-  hand_eroded(hand_eroded_idx) = true;
 
   // attempt to deepen hand
   double deepen_step_size = 0.005;
@@ -120,7 +116,8 @@ void FingerHand::deepenHand(const Eigen::Matrix3Xd& points, double min_depth, do
   }
 
   *this = last_new_hand; // recover the deepest hand
-  hand_ = hand_eroded;
+  hand_.setConstant(false);
+  hand_(hand_eroded_idx) = true;
 }
 
 
@@ -168,10 +165,7 @@ void FingerHand::evaluateHand()
 
 	for (int i = 0; i < n; i++)
 	{
-		if (fingers_(i) == true && fingers_(n + i) == true)
-			hand_(i) = true;
-		else
-			hand_(i) = false;
+	  hand_(i) = (fingers_(i) == true && fingers_(n + i) == true);
 	}
 }
 
@@ -180,7 +174,5 @@ void FingerHand::evaluateHand(int idx)
 {
   int n = fingers_.size() / 2;
   hand_.setConstant(false);
-
-  if (fingers_(idx) == true && fingers_(n + idx) == true)
-    hand_(idx) = 1;
+  hand_(idx) = (fingers_(idx) == true && fingers_(n + idx) == true);
 }

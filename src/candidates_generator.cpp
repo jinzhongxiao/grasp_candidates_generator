@@ -111,6 +111,7 @@ std::vector<Grasp> CandidatesGenerator::generateGraspCandidates(const CloudCamer
 {
   // Find sets of grasp candidates.
   std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
+  std::cout << "Generated " << hand_set_list.size() << " grasp candidate sets.\n";
 
   // Extract the grasp candidates.
   std::vector<Grasp> candidates;

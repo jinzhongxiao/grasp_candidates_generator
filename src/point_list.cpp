@@ -10,7 +10,7 @@ PointList::PointList(int size, int num_cams)
 }
 
 
-PointList PointList::sliceMatrix(const std::vector<int>& indices) const
+PointList PointList::slice(const std::vector<int>& indices) const
 {
   Eigen::Matrix3Xd points_out = sliceMatrix(points_, indices);
   Eigen::Matrix3Xd normals_out = sliceMatrix(normals_, indices);
@@ -73,5 +73,5 @@ PointList PointList::cropByHandHeight(double height, int dim) const
     }
   }
 
-  return sliceMatrix(indices);
+  return slice(indices);
 }

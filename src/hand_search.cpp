@@ -113,7 +113,7 @@ std::vector<Grasp> HandSearch::reevaluateHypotheses(const CloudCamera& cloud_cam
 
     if (kdtree.radiusSearch(sample, nn_radius_, nn_indices, nn_dists) > 0)
     {
-      nn_points = point_list.sliceMatrix(nn_indices);
+      nn_points = point_list.slice(nn_indices);
       nn_points.setPoints(nn_points.getPoints() - grasps[i].getSample().replicate(1, nn_points.size()));
       PointList nn_points_frame;
       FingerHand finger_hand(params_.finger_width_, params_.hand_outer_diameter_, params_.hand_depth_);
@@ -158,8 +158,8 @@ pcl::PointXYZRGBA HandSearch::eigenVectorToPcl(const Eigen::Vector3d& v) const
 }
 
 
-std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam,
-  const std::vector<LocalFrame>& frames, const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const
+std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam, const std::vector<LocalFrame>& frames,
+  const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const
 {
   double t1 = omp_get_wtime();
 
@@ -174,8 +174,9 @@ std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam,
   std::vector<GraspSet> hand_set_list(frames.size());
   PointList point_list(points, cloud_cam.getNormals(), cloud_cam.getCameraSource(), cloud_cam.getViewPoints());
   PointList nn_points;
-  GraspSet hand_set(params_.finger_width_, params_.hand_outer_diameter_, params_.hand_depth_,
-    params_.hand_height_, params_.init_bite_, params_.rotation_axis_);
+  GraspSet::HandGeometry hand_geom(params_.finger_width_, params_.hand_outer_diameter_, params_.hand_depth_,
+    params_.hand_height_, params_.init_bite_);
+  GraspSet hand_set(hand_geom, angles, params_.rotation_axis_);
 
 #ifdef _OPENMP // parallelization using OpenMP
 #pragma omp parallel for private(nn_indices, nn_dists, nn_points) num_threads(params_.num_threads_)
@@ -186,10 +187,10 @@ std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam,
 
     if (kdtree.radiusSearch(sample, nn_radius_, nn_indices, nn_dists) > 0)
     {
-      nn_points = point_list.sliceMatrix(nn_indices);
+      nn_points = point_list.slice(nn_indices);
       nn_points.setPoints(nn_points.getPoints() - frames[i].getSample().replicate(1, nn_points.size()));
 
-      hand_set.evaluateHypotheses(nn_points, frames[i], angles);
+      hand_set.evaluateHypotheses(nn_points, frames[i]);
 
       if (hand_set.getHypotheses().size() > 0)
       {
@@ -249,7 +250,7 @@ int HandSearch::labelHypothesis(const PointList& point_list, FingerHand& finger_
   }
 
   // extract data for classification
-  PointList point_list_learning = point_list.sliceMatrix(indices_learning);
+  PointList point_list_learning = point_list.slice(indices_learning);
 
   // evaluate if the grasp is antipodal
   Antipodal antipodal;
