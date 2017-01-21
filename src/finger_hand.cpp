@@ -7,60 +7,54 @@ FingerHand::FingerHand(double finger_width, double hand_outer_diameter,	double h
 {
 	int n = 10; // number of finger placements to consider over a single hand diameter
 
+	// Calculate the finger spacing.
 	Eigen::VectorXd fs_half;
 	fs_half.setLinSpaced(n, 0.0, hand_outer_diameter - finger_width);
-	finger_spacing_.resize(2 * fs_half.size());
+	finger_spacing_.resize(2 * n);
 	finger_spacing_	<< (fs_half.array() - hand_outer_diameter + finger_width_).matrix(), fs_half;
-	fingers_ = Eigen::Array<bool, 1, Eigen::Dynamic>::Constant(1, 2 * n, false);
 
-	hand_.resize(1, fingers_.size() / 2);
+	fingers_ = Eigen::Array<bool, 1, Eigen::Dynamic>::Constant(1, 2 * n, false);
+	hand_ = Eigen::Array<bool, 1, Eigen::Dynamic>::Constant(1, n, false);
 }
 
 
 void FingerHand::evaluateFingers(const Eigen::Matrix3Xd& points, double bite, int idx)
 {
-  // calculate fingertip distance (top) and hand base distance (bottom)
+  // Calculate top and bottom of the hand (top = fingertip, bottom = base).
   top_ = bite;
   bottom_ = bite - hand_depth_;
 
   fingers_.setConstant(false);
 
-  // crop points at bite
+  // Crop points at bite.
   std::vector<int> cropped_indices;
   for (int i = 0; i < points.cols(); i++)
   {
     if (points(forward_axis_, i) < bite)
     {
-      cropped_indices.push_back(i);
-
       // Check that the hand would be able to extend by <bite> onto the object without causing the back of the hand to
       // collide with <points>.
       if (points(forward_axis_, i) < bottom_)
       {
         return;
       }
+
+      cropped_indices.push_back(i);
     }
   }
 
-  // check that there is at least one point in between the fingers
+  // Check that there is at least one point in between the fingers.
   if (cropped_indices.size() == 0)
-    return;
-
-  Eigen::Matrix3Xd cropped_points(3, cropped_indices.size());
-  for (int i = 0; i < cropped_indices.size(); i++)
   {
-    cropped_points.col(i) = points.col(cropped_indices[i]);
+    return;
   }
 
-  // identify free gaps
-  int m = finger_spacing_.size();
+  // Identify free gaps (finger placements that do not collide with the point cloud).
   if (idx == -1)
   {
-    for (int i = 0; i < m; i++)
+    for (int i = 0; i < fingers_.size(); i++)
     {
-      int num_in_gap = (cropped_points.row(lateral_axis_).array() > finger_spacing_(i)
-                        && cropped_points.row(lateral_axis_).array() < finger_spacing_(i) + finger_width_).count();
-      if (num_in_gap == 0)
+      if (isGapFree(points, cropped_indices, i))
       {
         fingers_(i) = true;
       }
@@ -68,83 +62,108 @@ void FingerHand::evaluateFingers(const Eigen::Matrix3Xd& points, double bite, in
   }
   else
   {
-    for (int i = 0; i < m; i++)
+    if (isGapFree(points, cropped_indices, idx))
     {
-      if (i == idx || i == m/2 + idx)
-      {
-        int num_in_gap = (cropped_points.row(lateral_axis_).array() > finger_spacing_(i)
-                          && cropped_points.row(lateral_axis_).array() < finger_spacing_(i) + finger_width_).count();
-        if (num_in_gap == 0)
-        {
-          fingers_(i) = true;
-        }
-      }
+      fingers_(idx) = true;
+    }
+
+    if (isGapFree(points, cropped_indices, fingers_.size() / 2 + idx))
+    {
+      fingers_(fingers_.size() / 2 + idx) = true;
     }
   }
 }
 
 
-void FingerHand::deepenHand(const Eigen::Matrix3Xd& points, double min_depth, double max_depth)
+void FingerHand::evaluateHand()
+{
+  const int n = fingers_.size() / 2;
+
+  for (int i = 0; i < n; i++)
+  {
+    hand_(i) = (fingers_(i) == true && fingers_(n + i) == true);
+  }
+}
+
+
+void FingerHand::evaluateHand(int idx)
+{
+  const int n = fingers_.size() / 2;
+  hand_.setConstant(false);
+  hand_(idx) = (fingers_(idx) == true && fingers_(n + idx) == true);
+}
+
+
+int FingerHand::deepenHand(const Eigen::Matrix3Xd& points, double min_depth, double max_depth)
 {
   std::vector<int> hand_idx;
 
   for (int i = 0; i < hand_.cols(); i++)
   {
     if (hand_(i) == true)
+    {
       hand_idx.push_back(i);
+    }
   }
 
   if (hand_idx.size() == 0)
-    return;
+  {
+    return -1;
+  }
 
-  // choose middle hand
+  // Choose middle hand.
   int hand_eroded_idx = hand_idx[ceil(hand_idx.size() / 2.0) - 1]; // middle index
+  int opposite_idx = fingers_.size() / 2 + hand_eroded_idx; // opposite finger index
 
-  // attempt to deepen hand
-  double deepen_step_size = 0.005;
+  // Attempt to deepen hand (move as far onto the object as possible without collision).
+  const double DEEPEN_STEP_SIZE = 0.005;
   FingerHand new_hand = *this;
   FingerHand last_new_hand = new_hand;
 
-  for (double depth = min_depth + deepen_step_size; depth <= max_depth; depth += deepen_step_size)
+  for (double depth = min_depth + DEEPEN_STEP_SIZE; depth <= max_depth; depth += DEEPEN_STEP_SIZE)
   {
+    // Check if the new hand placement is feasible
     new_hand.evaluateFingers(points, depth, hand_eroded_idx);
-    if (new_hand.getFingers().cast<int>().sum() < 2)
+    if (!new_hand.fingers_(hand_eroded_idx) || !new_hand.fingers_(opposite_idx))
+    {
       break;
+    }
 
-    new_hand.evaluateHand();
+    hand_(hand_eroded_idx) = true;
     last_new_hand = new_hand;
   }
 
-  *this = last_new_hand; // recover the deepest hand
+  // Recover the deepest hand.
+  *this = last_new_hand;
   hand_.setConstant(false);
   hand_(hand_eroded_idx) = true;
+
+  return hand_eroded_idx;
 }
 
 
-std::vector<int> FingerHand::computePointsInClosingRegion(const Eigen::Matrix3Xd& points)
+std::vector<int> FingerHand::computePointsInClosingRegion(const Eigen::Matrix3Xd& points, int idx)
 {
-  // find feasible hand location
-  int idx = -1;
-  for (int i = 0; i < hand_.cols(); i++)
-  {
-    if (hand_(i) == true)
-    {
-      idx = i;
-      break;
-    }
-  }
+  // Find feasible finger placement.
   if (idx == -1)
   {
-    std::cout << "ERROR: Something went wrong!\n";
+    for (int i = 0; i < hand_.cols(); i++)
+    {
+      if (hand_(i) == true)
+      {
+        idx = i;
+        break;
+      }
+    }
   }
 
-  // calculate the lateral parameters of the closing region of the robot hand for this finger placement
+  // Calculate the lateral parameters of the hand closing region for this finger placement.
   left_ = finger_spacing_(idx) + finger_width_;
   right_ = finger_spacing_(hand_.cols() + idx);
   center_ = 0.5 * (left_ + right_);
   surface_ = points.row(lateral_axis_).minCoeff();
 
-  // find points inside closing region defined by <bottom_>, <top_>, <left_> and <right_>
+  // Find points inside the hand closing region defined by <bottom_>, <top_>, <left_> and <right_>.
   std::vector<int> indices;
   for (int i = 0; i < points.cols(); i++)
   {
@@ -159,20 +178,17 @@ std::vector<int> FingerHand::computePointsInClosingRegion(const Eigen::Matrix3Xd
 }
 
 
-void FingerHand::evaluateHand()
+bool FingerHand::isGapFree(const Eigen::Matrix3Xd& points, const std::vector<int>& indices, int idx)
 {
-	int n = fingers_.size() / 2;
+  for (int i = 0; i < indices.size(); i++)
+  {
+    const double& x = points(lateral_axis_, indices[i]);
 
-	for (int i = 0; i < n; i++)
-	{
-	  hand_(i) = (fingers_(i) == true && fingers_(n + i) == true);
-	}
-}
+    if (x > finger_spacing_(idx) && x < finger_spacing_(idx) + finger_width_)
+    {
+      return false;
+    }
+  }
 
-
-void FingerHand::evaluateHand(int idx)
-{
-  int n = fingers_.size() / 2;
-  hand_.setConstant(false);
-  hand_(idx) = (fingers_(idx) == true && fingers_(n + idx) == true);
+  return true;
 }

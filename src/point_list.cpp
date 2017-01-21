@@ -49,14 +49,22 @@ Eigen::MatrixXi PointList::sliceMatrix(const Eigen::MatrixXi& mat, const std::ve
 PointList PointList::transformToHandFrame(const Eigen::Vector3d& centroid, const Eigen::Matrix3d& rotation) const
 {
   Eigen::Matrix3Xd points_centered = points_ - centroid.replicate(1, size());
+  points_centered = rotation * points_centered;
+  Eigen::Matrix3Xd normals(3, points_centered.cols());
+  normals.noalias() = rotation * normals_;
 
-  return PointList(rotation * points_centered, rotation * normals_, cam_source_, view_points_);
+  return PointList(points_centered, normals, cam_source_, view_points_);
 }
 
 
 PointList PointList::rotatePointList(const Eigen::Matrix3d& rotation) const
 {
-  return PointList(rotation * points_, rotation * normals_, cam_source_, view_points_);
+  Eigen::Matrix3Xd points(3, points_.cols());
+  Eigen::Matrix3Xd normals(3, points_.cols());
+  points.noalias() = rotation * points_;
+  normals.noalias() = rotation * normals_;
+
+  return PointList(points, normals, cam_source_, view_points_);
 }
 
 

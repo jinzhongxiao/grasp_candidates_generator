@@ -83,21 +83,27 @@ public:
    * cropped by hand height
    * \param min_depth the minimum depth that the hand can be moved onto the object
    * \param max_depth the maximum depth that the hand can be moved onto the object
+   * \return the index of the middle finger placement
    */
-  void deepenHand(const Eigen::Matrix3Xd& points, double min_depth, double max_depth);
+  int deepenHand(const Eigen::Matrix3Xd& points, double min_depth, double max_depth);
 
   /**
    * \brief Compute which of the given points are located in the closing region of the robot hand.
    * \param points the points
+   * \param idx if this is larger than -1, only check the <idx>-th finger placement
    * \return the points that are located in the closing region
    */
-  std::vector<int> computePointsInClosingRegion(const Eigen::Matrix3Xd& points);
+  std::vector<int> computePointsInClosingRegion(const Eigen::Matrix3Xd& points, int idx = -1);
 
 	/**
-   * \brief Locate robot hand configurations by checking which finger placements were feasible.
+   * \brief Check which 2-finger placements are feasible.
   */
   void evaluateHand();
 
+  /**
+   * \brief Check the 2-finger placement at a given index.
+   * \param idx the index of the finger placement
+  */
   void evaluateHand(int idx);
 
 	/**
@@ -110,7 +116,7 @@ public:
   }
 	
 	/**
-	 * \brief Return the hand configuration evaluations.
+	 * \brief Return the finger placement evaluations.
 	 * \return the hand configuration evaluations
 	*/
   const Eigen::Array<bool, 1, Eigen::Dynamic>& getHand() const
@@ -223,7 +229,10 @@ public:
     top_ = top;
   }
 
+
 private:
+
+  bool isGapFree(const Eigen::Matrix3Xd& points, const std::vector<int>& indices, int idx);
 
   int forward_axis_; ///< the index of the horizontal axis in the hand frame (grasp approach direction)
   int lateral_axis_; ///< the index of the vertical axis in the hand frame (closing direction of the robot hand)
@@ -232,8 +241,8 @@ private:
   double hand_depth_; ///< the hand depth (finger length)
 
   Eigen::VectorXd finger_spacing_; ///< the possible finger placements
-  Eigen::Array<bool, 1, Eigen::Dynamic> fingers_; ///< indicates the feasible finger placements
-  Eigen::Array<bool, 1, Eigen::Dynamic> hand_;///< indicates the feasible hand locations
+  Eigen::Array<bool, 1, Eigen::Dynamic> fingers_; ///< indicates the feasible fingers
+  Eigen::Array<bool, 1, Eigen::Dynamic> hand_;///< indicates the feasible 2-finger placements
   double bottom_; ///< the base of the hand
   double top_; ///< the top of the hand, where the fingertips are
   double left_; ///< the left side of the gripper bounding box

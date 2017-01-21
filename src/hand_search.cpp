@@ -227,11 +227,11 @@ bool HandSearch::reevaluateHypothesis(const PointList& point_list, const Grasp& 
   finger_hand.evaluateFingers(point_list_cropped.getPoints(), hand.getTop(), hand.getFingerPlacementIndex());
 
   // Check that the finger placement is possible.
-  if (finger_hand.getFingers().cast<int>().sum() >= 2)
+  if (finger_hand.getFingers().count() >= 2)
   {
     finger_hand.evaluateHand(hand.getFingerPlacementIndex());
 
-    if (finger_hand.getHand().cast<int>().sum() > 0)
+    if (finger_hand.getHand().count() > 0)
     {
       return true;
     }

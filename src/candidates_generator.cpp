@@ -117,8 +117,15 @@ std::vector<Grasp> CandidatesGenerator::generateGraspCandidates(const CloudCamer
   std::vector<Grasp> candidates;
   for (int i = 0; i < hand_set_list.size(); i++)
   {
-    candidates.insert(candidates.end(), hand_set_list[i].getHypotheses().begin(),
-      hand_set_list[i].getHypotheses().end());
+    const std::vector<Grasp>& hands = hand_set_list[i].getHypotheses();
+
+    for (int j = 0; j < hands.size(); j++)
+    {
+      if (hand_set_list[i].getIsValid()(j))
+      {
+        candidates.push_back(hands[j]);
+      }
+    }
   }
   std::cout << "Generated " << candidates.size() << " grasp candidates.\n";
 

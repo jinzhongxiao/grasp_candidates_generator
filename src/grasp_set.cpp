@@ -50,7 +50,8 @@ void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame&
             0.0,              0.0,                      1.0;
 
     // Rotate points into this hand orientation.
-    Eigen::Matrix3d frame_rot = local_frame_mat * rot_binormal * rot;
+    Eigen::Matrix3d frame_rot;
+    frame_rot.noalias() = local_frame_mat * rot_binormal * rot;
     PointList point_list_frame = point_list.rotatePointList(frame_rot.transpose());
 
     // Crop points on hand height.
@@ -59,29 +60,26 @@ void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame&
     // Evaluate finger placements for this orientation.
     finger_hand.evaluateFingers(point_list_cropped.getPoints(), hand_geometry_.init_bite_);
 
-    // Check that there are at least two corresponding finger placements.
-    if (finger_hand.getFingers().cast<int>().sum() >= 2)
+    // Check that there is at least one feasible 2-finger placement.
+    finger_hand.evaluateHand();
+
+    if (finger_hand.getHand().any())
     {
-      finger_hand.evaluateHand();
+      // Try to move the hand as deep as possible onto the object.
+      int finger_idx = finger_hand.deepenHand(point_list_cropped.getPoints(), hand_geometry_.init_bite_, hand_geometry_.depth_);
 
-      if (finger_hand.getHand().cast<int>().sum() > 0)
+      // Calculate points in the closing region of the hand.
+      std::vector<int> indices_closing = finger_hand.computePointsInClosingRegion(point_list_cropped.getPoints(), finger_idx);
+      if (indices_closing.size() == 0)
       {
-        // Try to move the hand as deep as possible onto the object.
-        finger_hand.deepenHand(point_list_cropped.getPoints(), hand_geometry_.init_bite_, hand_geometry_.depth_);
-
-        // Calculate points in the closing region of the hand.
-        std::vector<int> indices_closing = finger_hand.computePointsInClosingRegion(point_list_cropped.getPoints());
-        if (indices_closing.size() == 0)
-        {
-          continue;
-        }
-
-        // create the grasp hypothesis
-        Grasp hand = createHypothesis(local_frame.getSample(), point_list_cropped, indices_closing, frame_rot,
-          finger_hand);
-        hands_[i] = hand;
-        is_valid_[i] = true;
+        continue;
       }
+
+      // create the grasp hypothesis
+      Grasp hand = createHypothesis(local_frame.getSample(), point_list_cropped, indices_closing, frame_rot,
+        finger_hand);
+      hands_[i] = hand;
+      is_valid_[i] = true;
     }
   }
 }
