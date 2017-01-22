@@ -38,6 +38,8 @@
 
 #include <vector>
 
+#include <grasp_candidates_generator/eigen_utils.h>
+
 
 class PointList
 {
@@ -52,10 +54,6 @@ class PointList
     PointList(int size, int num_cams);
 
     PointList slice(const std::vector<int>& indices) const;
-
-    Eigen::Matrix3Xd sliceMatrix(const Eigen::Matrix3Xd& mat, const std::vector<int>& indices) const;
-
-    Eigen::MatrixXi sliceMatrix(const Eigen::MatrixXi& mat, const std::vector<int>& indices) const;
 
     PointList transformToHandFrame(const Eigen::Vector3d& centroid, const Eigen::Matrix3d& rotation) const;
 

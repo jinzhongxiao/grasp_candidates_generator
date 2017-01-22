@@ -24,6 +24,7 @@ add_library(grasp_candidates_generator SHARED src/candidates_generator.cpp)
 add_library(antipodal src/antipodal.cpp)
 add_library(cloud_camera src/cloud_camera.cpp)
 add_library(config_file src/config_file.cpp)
+add_library(eigen_utils src/eigen_utils.cpp)
 add_library(finger_hand src/finger_hand.cpp)
 add_library(frame_estimator src/frame_estimator.cpp)
 add_library(grasp src/grasp.cpp)
@@ -39,7 +40,7 @@ target_link_libraries(generate_candidates config_file grasp_candidates_generator
 
 # Linking for libraries
 target_link_libraries(antipodal point_list)
-target_link_libraries(cloud_camera ${PCL_LIBRARIES})
+target_link_libraries(cloud_camera eigen_utils ${PCL_LIBRARIES})
 target_link_libraries(frame_estimator cloud_camera local_frame ${PCL_LIBRARIES})
 target_link_libraries(grasp finger_hand)
 target_link_libraries(hand_search antipodal cloud_camera finger_hand frame_estimator grasp grasp_set local_frame plot 
@@ -48,6 +49,7 @@ target_link_libraries(grasp_set antipodal finger_hand grasp local_frame point_li
 target_link_libraries(local_frame ${PCL_LIBRARIES})
 target_link_libraries(plot grasp grasp_set local_frame ${PCL_LIBRARIES})
 target_link_libraries(grasp_candidates_generator cloud_camera grasp grasp_set hand_search plot ${PCL_LIBRARIES})
+target_link_libraries(point_list eigen_utils)
 
 # Set the location for library installation (/usr/lib in this case is not really necessary)
 # Use "sudo make install" to apply

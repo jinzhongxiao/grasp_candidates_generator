@@ -169,7 +169,7 @@ void CloudCamera::voxelizeCloud(double cell_size)
   {
     Eigen::Vector3f p;
     p << pts.col(i)(0), pts.col(i)(1), pts.col(i)(2);
-    Eigen::Vector3i v = floorVector((p - min_xyz) / cell_size);
+    Eigen::Vector3i v = EigenUtils::floorVector((p - min_xyz) / cell_size);
     Eigen::Vector4i v4;
     v4 << v(0), v(1), v(2), i;
     std::pair< std::set<Eigen::Vector4i, CloudCamera::UniqueVectorFirstThreeElementsComparator>::iterator, bool> res = bins.insert(v4);
@@ -339,14 +339,6 @@ void CloudCamera::setNormalsFromFile(const std::string& filename)
 
     i++;
   }
-}
-
-
-Eigen::Vector3i CloudCamera::floorVector(const Eigen::Vector3f& a) const
-{
-  Eigen::Vector3i b;
-  b << floor(a(0)), floor(a(1)), floor(a(2));
-  return b;
 }
 
 

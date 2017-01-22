@@ -50,6 +50,8 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
+#include <grasp_candidates_generator/eigen_utils.h>
+
 
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGB;
 typedef pcl::PointCloud<pcl::PointNormal> PointCloudNormal;
@@ -211,13 +213,6 @@ public:
 private:
 
   PointCloudRGB::Ptr loadPointCloudFromFile(const std::string& filename) const;
-
-  /**
-   * \brief Round a 3D-vector down to the closest, smaller integers.
-   * \param a the 3D-vector to be rounded down
-   * \return the rounded down 3D-vector
-  */
-  Eigen::Vector3i floorVector(const Eigen::Vector3f& a) const;
 
   PointCloudRGB::Ptr cloud_processed_; ///< the (processed) point cloud
   PointCloudRGB::Ptr cloud_original_; ///< the original point cloud
