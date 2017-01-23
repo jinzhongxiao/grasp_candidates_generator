@@ -59,21 +59,22 @@ void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
       // subsample the remaining samples
       cloud_cam.subsampleSamples(params_.num_samples_);
     }
-
-    // 3. Subsampling
-    if (params_.num_samples_ > cloud_cam.getCloudProcessed()->size())
-    {
-      std::vector<int> indices_all(cloud_cam.getCloudProcessed()->size());
-      for (int i=0; i < cloud_cam.getCloudProcessed()->size(); i++)
-        indices_all[i] = i;
-      cloud_cam.setSampleIndices(indices_all);
-      std::cout << "Cloud is smaller than num_samples. Subsampled all " << cloud_cam.getCloudProcessed()->size()
-        << " points.\n";
-    }
     else
     {
-      cloud_cam.subsampleUniformly(params_.num_samples_);
-      std::cout << "Subsampled " << params_.num_samples_ << " at random uniformly.\n";
+      if (params_.num_samples_ > cloud_cam.getCloudProcessed()->size())
+      {
+        std::vector<int> indices_all(cloud_cam.getCloudProcessed()->size());
+        for (int i=0; i < cloud_cam.getCloudProcessed()->size(); i++)
+          indices_all[i] = i;
+        cloud_cam.setSampleIndices(indices_all);
+        std::cout << "Cloud is smaller than num_samples. Subsampled all " << cloud_cam.getCloudProcessed()->size()
+          << " points.\n";
+      }
+      else
+      {
+        cloud_cam.subsampleUniformly(params_.num_samples_);
+        std::cout << "Subsampled " << params_.num_samples_ << " at random uniformly.\n";
+      }
     }
   }
   // Indices into point cloud given
