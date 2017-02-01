@@ -4,6 +4,7 @@
 CandidatesGenerator::CandidatesGenerator(const Parameters& params,
   const HandSearch::Parameters& hand_search_params) : params_(params)
 {
+  Eigen::initParallel();
   hand_search_ = new HandSearch(hand_search_params);
 }
 
