@@ -121,12 +121,28 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
     }
   }
 
-  // TODO: Find the intersection of all sets of occluded points.
+  // Find the intersection of all sets of occluded points.
   double t0_copy= omp_get_wtime();
   Vector3iSet bins_all;
+
+  // only one camera, no intersection
   if (shadows.size() == 1)
   {
     bins_all = shadows[0];
+  }
+  // more than one camera
+  else
+  {
+    // brute force intersection (TODO: speed this up)
+    for (int i = 0; i < shadows.size(); ++i)
+    {
+      Vector3iSet::const_iterator it;
+
+      for (it = shadows[i].begin(); it != shadows[i].end(); it++)
+      {
+        bins_all.insert(*it);
+      }
+    }
   }
 
   // Convert voxels back to points.

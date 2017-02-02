@@ -120,6 +120,12 @@ public:
 
   CloudCamera();
 
+  CloudCamera(const PointCloudRGB::Ptr& cloud, const Eigen::MatrixXi& camera_source,
+    const Eigen::Matrix3Xd& view_points);
+
+  CloudCamera(const PointCloudNormal::Ptr& cloud, const Eigen::MatrixXi& camera_source,
+    const Eigen::Matrix3Xd& view_points);
+
   CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);
 
   CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);

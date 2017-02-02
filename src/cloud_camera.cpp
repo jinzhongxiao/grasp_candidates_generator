@@ -6,6 +6,35 @@ CloudCamera::CloudCamera()
 {
   view_points_.resize(3,1);
   view_points_ << 0.0, 0.0, 0.0;
+  sample_indices_.resize(0);
+  samples_.resize(3,0);
+  normals_.resize(3,0);
+}
+
+
+CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, const Eigen::MatrixXi& camera_source,
+  const Eigen::Matrix3Xd& view_points) : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB),
+    camera_source_(camera_source), view_points_(view_points)
+{
+  sample_indices_.resize(0);
+  samples_.resize(3,0);
+  normals_.resize(3,0);
+
+  pcl::copyPointCloud(*cloud, *cloud_original_);
+  *cloud_processed_ = *cloud_original_;
+}
+
+
+CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, const Eigen::MatrixXi& camera_source,
+  const Eigen::Matrix3Xd& view_points) : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB),
+    camera_source_(camera_source), view_points_(view_points)
+{
+  sample_indices_.resize(0);
+  samples_.resize(3,0);
+  normals_.resize(3,0);
+
+  pcl::copyPointCloud(*cloud, *cloud_original_);
+  *cloud_processed_ = *cloud_original_;
 }
 
 
@@ -19,7 +48,7 @@ CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud
   *cloud_processed_ = *cloud_original_;
 
   // set the camera source matrix: (i,j) = 1 if point j is seen by camera i
-  if (size_left_cloud == cloud->size()) // one camera
+  if (size_left_cloud == 0) // one camera
   {
     camera_source_ = Eigen::MatrixXi::Zero(1, cloud->size());
   }
@@ -45,7 +74,7 @@ CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, c
   sample_indices_.resize(0);
 
   // set the camera source matrix: (i,j) = 1 if point j is seen by camera i
-  if (size_left_cloud == cloud->size()) // one camera
+  if (size_left_cloud == 0) // one camera
   {
     camera_source_ = Eigen::MatrixXi::Zero(1, cloud->size());
   }
@@ -60,7 +89,7 @@ CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, c
 
 
 CloudCamera::CloudCamera(const std::string& filename, const Eigen::Matrix3Xd& view_points)
-  : cloud_processed_(new PointCloudRGB), view_points_(view_points)
+  : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
 {
   sample_indices_.resize(0);
   cloud_processed_ = loadPointCloudFromFile(filename);
@@ -71,7 +100,8 @@ CloudCamera::CloudCamera(const std::string& filename, const Eigen::Matrix3Xd& vi
 
 
 CloudCamera::CloudCamera(const std::string& filename_left, const std::string& filename_right,
-    const Eigen::Matrix3Xd& view_points) : cloud_processed_(new PointCloudRGB), view_points_(view_points)
+  const Eigen::Matrix3Xd& view_points)
+  : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
 {
   sample_indices_.resize(0);
 
@@ -312,6 +342,36 @@ void CloudCamera::calculateNormals(int num_threads)
   }
 
   normals_ = cloud_normals->getMatrixXfMap().cast<double>();
+
+  // reverse direction of normals (if a normal does not point to at least one camera)
+  if (view_points_.cols() > 1)
+  {
+    std::cout << "Reversing normals that do not point to at least 1 camera ...\n";
+
+    for (int i = 0; i < normals_.cols(); i++)
+    {
+      bool needs_reverse = true;
+
+      for (int j = 0; j < view_points_.cols(); j++)
+      {
+        if (camera_source_(j,i) == 1) // point is seen by this camera
+        {
+          Eigen::Vector3d cam_to_point = cloud_processed_->at(i).getVector3fMap().cast<double>() - view_points_.col(j);
+
+          if (normals_.col(i).dot(cam_to_point) > 0) // normal points toward camera
+          {
+            needs_reverse = false;
+            break;
+          }
+        }
+      }
+
+      if (needs_reverse)
+      {
+        normals_.col(i) *= -1.0;
+      }
+    }
+  }
 
   std::cout << " runtime: " << omp_get_wtime() - t0 << "\n";
 }
