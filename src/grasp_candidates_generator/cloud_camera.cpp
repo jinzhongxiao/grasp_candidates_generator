@@ -130,7 +130,7 @@ void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
   // Filter indices into the point cloud.
   if (sample_indices_.size() > 0)
   {
-    std::vector<int> indices;
+    std::vector<int> indices_to_keep;
 
     for (int i = 0; i < sample_indices_.size(); i++)
     {
@@ -138,11 +138,29 @@ void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
       if (p.x > workspace[0] && p.x < workspace[1] && p.y > workspace[2] && p.y < workspace[3]
           && p.z > workspace[4] && p.z < workspace[5])
       {
-        indices.push_back(i);
+        indices_to_keep.push_back(i);
       }
     }
 
-    sample_indices_ = indices;
+    sample_indices_ = indices_to_keep;
+  }
+
+  // Filter (x,y,z)-samples.
+  if (samples_.cols() > 0)
+  {
+    std::vector<int> indices_to_keep;
+
+    for (int i = 0; i < samples_.cols(); i++)
+    {
+      if (samples_(0,i) > workspace[0] && samples_(0,i) < workspace[1]
+          && samples_(1,i) > workspace[2] && samples_(1,i) < workspace[3]
+          && samples_(2,i) > workspace[4] && samples_(2,i) < workspace[5])
+      {
+        indices_to_keep.push_back(i);
+      }
+    }
+
+    samples_= EigenUtils::sliceMatrix(samples_, indices_to_keep);
   }
 
   // Filter the point cloud.
