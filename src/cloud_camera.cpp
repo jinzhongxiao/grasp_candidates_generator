@@ -127,6 +127,25 @@ CloudCamera::CloudCamera(const std::string& filename_left, const std::string& fi
 
 void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
 {
+  // Filter indices into the point cloud.
+  if (sample_indices_.size() > 0)
+  {
+    std::vector<int> indices;
+
+    for (int i = 0; i < sample_indices_.size(); i++)
+    {
+      const pcl::PointXYZRGBA& p = cloud_processed_->points[sample_indices_[i]];
+      if (p.x > workspace[0] && p.x < workspace[1] && p.y > workspace[2] && p.y < workspace[3]
+          && p.z > workspace[4] && p.z < workspace[5])
+      {
+        indices.push_back(i);
+      }
+    }
+
+    sample_indices_ = indices;
+  }
+
+  // Filter the point cloud.
   std::vector<int> indices;
   for (int i = 0; i < cloud_processed_->size(); i++)
   {
@@ -321,8 +340,12 @@ void CloudCamera::calculateNormals(int num_threads)
   if (cloud_processed_->isOrganized())
   {
     std::cout << " using integral images ...\n";
+    std::cout << view_points_.cols() << "\n";
+    std::cout << view_points_.col(0).transpose() << "\n";
     pcl::IntegralImageNormalEstimation<pcl::PointXYZRGBA, pcl::Normal> ne;
+    std::cout << "A " << cloud_processed_->points.size() << ", " << cloud_processed_->isOrganized() << "\n";
     ne.setInputCloud(cloud_processed_);
+    std::cout << "B\n";
     ne.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
     ne.setNormalEstimationMethod(ne.COVARIANCE_MATRIX);
     ne.setNormalSmoothingSize(20.0f);
