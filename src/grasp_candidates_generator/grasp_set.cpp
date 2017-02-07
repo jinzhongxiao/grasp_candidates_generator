@@ -134,6 +134,7 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
   else
   {
     // brute force intersection (TODO: speed this up)
+    double t0_intersection = omp_get_wtime();
     for (int i = 0; i < shadows.size(); ++i)
     {
       Vector3iSet::const_iterator it;
@@ -143,6 +144,7 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
         bins_all.insert(*it);
       }
     }
+    std::cout << "intersection runtime: " << omp_get_wtime() - t0_intersection << "s\n";
   }
 
   // Convert voxels back to points.

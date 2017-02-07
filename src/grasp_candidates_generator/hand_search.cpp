@@ -201,7 +201,7 @@ std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam, co
 
       hand_set.evaluateHypotheses(nn_points, frames[i]);
 
-      if (hand_set.getHypotheses().size() > 0)
+      if (hand_set.getIsValid().any()) // at least one feasible hand
       {
         hand_set_list[i] = hand_set;
       }
@@ -212,14 +212,14 @@ std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam, co
   std::vector<GraspSet> hand_set_list_out;
   for (std::size_t i = 0; i < hand_set_list.size(); i++)
   {
-    if (hand_set_list[i].getHypotheses().size() > 0)
+    if (hand_set_list[i].getIsValid().any())
     {
       hand_set_list_out.push_back(hand_set_list[i]);
     }
   }
 
   double t2 = omp_get_wtime();
-  std::cout << " Found " << hand_set_list_out.size() << " grasp candidates in " << t2 - t1 << " sec.\n";
+  std::cout << " Found " << hand_set_list_out.size() << " grasp candidate sets in " << t2 - t1 << " sec.\n";
 
   return hand_set_list_out;
 }
