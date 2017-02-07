@@ -115,9 +115,7 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
       shadow_vec = shadow_length * shadow_vec / shadow_vec.norm();
 
       // Calculate occluded points.
-      Vector3iSet shadow = calculateVoxelizedShadow(point_list, shadow_vec, num_shadow_points, voxel_grid_size);
-
-      shadows[i] = shadow;
+      shadows[i] = calculateVoxelizedShadowVectorized(point_list, shadow_vec, num_shadow_points, voxel_grid_size);
     }
   }
 
@@ -165,14 +163,64 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
     shadow_out.col(i)(2) += generator() * voxel_grid_size * 0.3;
     i++;
   }
+//  std::cout << "voxels-to-points runtime: " << omp_get_wtime() - t0_voxels << "s\n";
 
   return shadow_out;
 }
 
 
-Vector3iSet GraspSet::calculateVoxelizedShadow(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
+Vector3iSet GraspSet::calculateVoxelizedShadowVectorized(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
   int num_shadow_points, double voxel_grid_size) const
 {
+  double t0_shadow = omp_get_wtime();
+  Eigen::Matrix3Xi shadows_mat(3, point_list.size() * num_shadow_points);
+
+  Eigen::internal::scalar_normal_dist_op<double> rand_uni; // Uniform functor
+  Eigen::internal::scalar_normal_dist_op<double>::rng.seed(42u); // Seed the rng
+
+  const Eigen::Matrix3Xd shadow_vec_mat = shadow_vec.replicate(1, num_shadow_points);
+
+  for(int i = 0; i < point_list.size(); i++)
+  {
+//    const Eigen::Vector3d& p = point_list.getPoints().col(i);
+//    Eigen::Matrix3Xd uni = ((Eigen::VectorXd::Random(num_shadow_points) + Eigen::VectorXd::Ones(num_shadow_points)) / 2.0).replicate(3,1);
+//    Eigen::Matrix3Xd shadow = p.replicate(1, num_shadow_points) + uni.cwiseProduct(shadow_vec.replicate(1, num_shadow_points));
+//    shadows_mat.block(0, i*num_shadow_points , 3, num_shadow_points) = (shadow / voxel_grid_size).unaryExpr(std::ptr_fun(floor)).cast<int>();
+
+//    const Eigen::Vector3d& p = point_list.getPoints().col(i);
+    shadows_mat.block(0, i*num_shadow_points , 3, num_shadow_points)
+      = (((point_list.getPoints().col(i).replicate(1,num_shadow_points)
+//        + ((Eigen::VectorXd::Random(num_shadow_points) + Eigen::VectorXd::Ones(num_shadow_points)) / 2.0).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
+//        + (0.5 * Eigen::VectorXd::Random(num_shadow_points) + 0.5 * Eigen::VectorXd::Ones(num_shadow_points)).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
+//        + Eigen::VectorXd::NullaryExpr(num_shadow_points, rand_uni).transpose().replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
+//        + Eigen::RowVectorXd::NullaryExpr(num_shadow_points, rand_uni).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
+        + Eigen::RowVectorXd::NullaryExpr(num_shadow_points, rand_uni).replicate(3,1).cwiseProduct(shadow_vec_mat)
+//        + (Eigen::VectorXd::Random(num_shadow_points) * 0.5 + Eigen::VectorXd::Constant(0.5, num_shadow_points)).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
+         ) / voxel_grid_size).unaryExpr(std::ptr_fun(floor))).cast<int>();
+//    temp.unaryExpr(std::ptr_fun(floor));
+//    shadows_mat.block(0, i*num_shadow_points , 3, num_shadow_points) = temp;
+  }
+//  std::cout << "Shadow calculation runtime: " << omp_get_wtime() - t0_shadow << "\n";
+
+  double t0_set = omp_get_wtime();
+  Vector3iSet shadow_set;
+  shadow_set.reserve(shadows_mat.cols());
+
+  for(int i = 0; i < shadows_mat.cols(); i++)
+  {
+    shadow_set.insert(shadows_mat.col(i));
+  }
+//  std::cout << "Set construction runtime: " << omp_get_wtime() - t0_set << "\n";
+
+  return shadow_set;
+}
+
+
+Vector3iSet GraspSet::calculateVoxelizedShadowLoop(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
+  int num_shadow_points, double voxel_grid_size) const
+{
+  double t0_shadow = omp_get_wtime();
+
   // Create generator for uniform random numbers.
   boost::mt11213b generator(42u);
   boost::uniform_real<> uni_dist(0.0, 1.0);
@@ -189,6 +237,8 @@ Vector3iSet GraspSet::calculateVoxelizedShadow(const PointList& point_list, cons
       shadow.insert(shadow_point);
     }
   }
+
+//  std::cout << "Shadow calculation runtime: " << omp_get_wtime() - t0_shadow << "\n";
 
   return shadow;
 }

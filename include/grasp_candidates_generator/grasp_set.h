@@ -76,6 +76,34 @@ struct hash<Eigen::Vector3i>
 }
 
 
+/*
+  We need a functor that can pretend it's const,
+  but to be a good random number generator
+  it needs mutable state.
+*/
+namespace Eigen {
+namespace internal {
+template<typename Scalar>
+struct scalar_normal_dist_op
+{
+  static boost::mt11213b rng;    // The uniform pseudo-random algorithm
+  mutable boost::uniform_01<Scalar> uni;  // The gaussian combinator
+
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_normal_dist_op)
+
+  template<typename Index>
+  inline const Scalar operator() (Index, Index = 0) const { return uni(rng); }
+};
+
+template<typename Scalar> boost::mt11213b scalar_normal_dist_op<Scalar>::rng;
+
+template<typename Scalar>
+struct functor_traits<scalar_normal_dist_op<Scalar> >
+{ enum { Cost = 500 * NumTraits<Scalar>::MulCost, PacketAccess = false, IsRepeatable = false }; };
+} // end namespace internal
+} // end namespace Eigen
+
+
 typedef boost::unordered_set<Eigen::Vector3i, boost::hash<Eigen::Vector3i> > Vector3iSet;
 
 
@@ -147,7 +175,10 @@ class GraspSet
 
   private:
 
-    Vector3iSet calculateVoxelizedShadow(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
+    Vector3iSet calculateVoxelizedShadowLoop(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
+      int num_shadow_points, double voxel_grid_size) const;
+
+    Vector3iSet calculateVoxelizedShadowVectorized(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
       int num_shadow_points, double voxel_grid_size) const;
 
     Eigen::VectorXi floorVector(const Eigen::VectorXd& a) const;
