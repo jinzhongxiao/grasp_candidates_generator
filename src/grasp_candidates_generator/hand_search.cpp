@@ -58,10 +58,19 @@ std::vector<GraspSet> HandSearch::searchHands(const CloudCamera& cloud_cam, int 
   std::cout << "Estimating local reference frames ...\n";
   std::vector<LocalFrame> frames;
   FrameEstimator frame_estimator(params_.num_threads_);
-  if (use_samples)
+  // if (use_samples)
+  if (cloud_cam.getSamples().cols() > 0)
     frames = frame_estimator.calculateLocalFrames(cloud_cam, cloud_cam.getSamples(), params_.nn_radius_frames_, kdtree);
-  else
+  else if (cloud_cam.getSampleIndices().size() > 0)
     frames = frame_estimator.calculateLocalFrames(cloud_cam, cloud_cam.getSampleIndices(), params_.nn_radius_frames_, kdtree);
+  else
+  {
+    std::cout << "Error: No samples or no indices!\n";
+    std::vector<GraspSet> hypothesis_set_list;
+    hypothesis_set_list.resize(0);
+    return hypothesis_set_list;
+  }
+
   if (plots_local_axes_)
     plot_.plotLocalAxes(frames, cloud_cam.getCloudOriginal());
 

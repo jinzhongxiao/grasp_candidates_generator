@@ -143,6 +143,7 @@ void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
     }
 
     sample_indices_ = indices_to_keep;
+    std::cout << sample_indices_.size() << " sample indices left after workspace filtering \n";
   }
 
   // Filter (x,y,z)-samples.
@@ -161,6 +162,7 @@ void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
     }
 
     samples_= EigenUtils::sliceMatrix(samples_, indices_to_keep);
+    std::cout << samples_.cols() << " samples left after workspace filtering \n";
   }
 
   // Filter the point cloud.
@@ -315,7 +317,8 @@ void CloudCamera::subsampleSamples(int num_samples)
   // subsample the incoming samples
   else
   {
-    std::vector<int> seq(samples_.size());
+    std::cout << "Using " << num_samples << " out of " << samples_.cols() << " available samples.\n"; 
+    std::vector<int> seq(samples_.cols());
     for (int i = 0; i < seq.size(); i++)
     {
       seq[i] = i;
@@ -323,7 +326,7 @@ void CloudCamera::subsampleSamples(int num_samples)
     std::random_shuffle(seq.begin(), seq.end());
 
     Eigen::Matrix3Xd subsamples(3, num_samples);
-    for (int i = 0; i < samples_.cols(); i++)
+    for (int i = 0; i < num_samples; i++)
     {
       subsamples.col(i) = samples_.col(seq[i]);
     }
@@ -354,6 +357,8 @@ void CloudCamera::calculateNormals(int num_threads)
   std::cout << "Calculating surface normals";
 
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+  PointCloudRGB::Ptr cloud_samples(new PointCloudRGB);
+  cloud_samples->resize(0);
 
   if (cloud_processed_->isOrganized())
   {
@@ -371,11 +376,36 @@ void CloudCamera::calculateNormals(int num_threads)
   }
   else
   {
-    std::cout << " using normal estimation OMP ...\n";
+    std::cout << " using normal estimation OMP (" << num_threads << " threads) ...\n";
     pcl::NormalEstimationOMP<pcl::PointXYZRGBA, pcl::Normal> estimator(num_threads);
     pcl::search::KdTree<pcl::PointXYZRGBA>::Ptr tree_ptr(new pcl::search::KdTree<pcl::PointXYZRGBA>);
-    estimator.setInputCloud(cloud_processed_);
-    estimator.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
+    
+    // // use samples as input and complete cloud as search surface
+    // if (samples_.cols() > 0)
+    // {
+    //   cloud_samples->resize(samples_.cols());
+    //   for (int i = 0; i < samples_.cols(); i++)
+    //   {
+    //     cloud_samples->at(i).getVector3fMap() = samples_.col(i).cast<float>();
+    //   }
+    //   estimator.setInputCloud(cloud_samples);
+    //   estimator.setSearchSurface(cloud_processed_);
+    // }
+    // else
+    // {
+      estimator.setInputCloud(cloud_processed_);
+    // }
+
+    // one camera view point
+    if (view_points_.cols() == 1)
+    {
+      estimator.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
+    }
+    else // multiple camera view points
+    {
+      estimator.setViewPoint(0.0, 0.0, 0.0);
+    }
+
     estimator.setSearchMethod(tree_ptr);
     estimator.setRadiusSearch(0.03);
 //    estimator.setKSearch(30);
@@ -383,38 +413,51 @@ void CloudCamera::calculateNormals(int num_threads)
   }
 
   normals_ = cloud_normals->getMatrixXfMap().cast<double>();
+  std::cout << " runtime (normals): " << omp_get_wtime() - t0 << "\n";
+  double t1 = omp_get_wtime();
+
+  // if (samples_.cols() > 0)
+  // {
+	 //  Plot plotter;
+  //   plotter.plotNormals(cloud_processed_, cloud_samples, normals_);
+  // }
 
   // reverse direction of normals (if a normal does not point to at least one camera)
-  if (view_points_.cols() > 1)
-  {
-    std::cout << "Reversing normals that do not point to at least 1 camera ...\n";
-
-    for (int i = 0; i < normals_.cols(); i++)
-    {
-      bool needs_reverse = true;
-
-      for (int j = 0; j < view_points_.cols(); j++)
-      {
-        if (camera_source_(j,i) == 1) // point is seen by this camera
-        {
-          Eigen::Vector3d cam_to_point = cloud_processed_->at(i).getVector3fMap().cast<double>() - view_points_.col(j);
-
-          if (normals_.col(i).dot(cam_to_point) > 0) // normal points toward camera
-          {
-            needs_reverse = false;
-            break;
-          }
-        }
-      }
-
-      if (needs_reverse)
-      {
-        normals_.col(i) *= -1.0;
-      }
-    }
-  }
-
-  std::cout << " runtime: " << omp_get_wtime() - t0 << "\n";
+//  if (view_points_.cols() > 1)
+//  {
+//    std::cout << "Reversing normals that do not point to at least 1 camera ...\n";
+//    std::cout << view_points_ << "\n";
+//    std::cout << "camera_source: " << camera_source_.rows() << " x " << camera_source_.cols() << ", points: " << cloud_processed_->size() << ", normals: " << normals_.cols() << "\n";
+//    int c = 0;
+//
+//    for (int i = 0; i < normals_.cols(); i++)
+//    {
+//      bool needs_reverse = true;
+//
+//      for (int j = 0; j < view_points_.cols(); j++)
+//      {
+//        if (camera_source_(j,i) == 1) // point is seen by this camera
+//        {
+//          Eigen::Vector3d cam_to_point = cloud_processed_->at(i).getVector3fMap().cast<double>() - view_points_.col(j);
+//
+//          if (normals_.col(i).dot(cam_to_point) < 0) // normal points toward camera
+//          {
+//            needs_reverse = false;
+//            break;
+//          }
+//        }
+//      }
+//
+//      if (needs_reverse)
+//      {
+//        normals_.col(i) *= -1.0;
+//        c++;
+//      }
+//    }
+//
+//    std::cout << " reversed " << c << " normals\n";
+//    std::cout << " runtime (reverse normals): " << omp_get_wtime() - t1 << "\n";
+//  }
 }
 
 

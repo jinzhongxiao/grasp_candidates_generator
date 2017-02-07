@@ -147,6 +147,38 @@ void Plot::plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointClou
 }
 
 
+void Plot::plotNormals(const PointCloudRGBA::Ptr& cloud, const PointCloudRGBA::Ptr& cloud_samples, const Eigen::Matrix3Xd& normals) const
+{
+  PointCloudNormal::Ptr normals_cloud(new PointCloudNormal);
+  for (int i=0; i < normals.cols(); i++)
+  {
+    pcl::PointNormal p;
+    p.x = cloud_samples->points[i].x;
+    p.y = cloud_samples->points[i].y;
+    p.z = cloud_samples->points[i].z;
+    p.normal_x = normals(0,i);
+    p.normal_y = normals(1,i);
+    p.normal_z = normals(2,i);
+    normals_cloud->points.push_back(p);
+  }
+  std::cout << "Drawing " << normals_cloud->size() << " normals\n";
+
+  double red[3] = {1.0, 0.0, 0.0};
+  double blue[3] = {0.0, 0.0, 1.0};
+
+  boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer("Normals");
+
+  // draw the point cloud
+  pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> rgb(cloud);
+  viewer->addPointCloud<pcl::PointXYZRGBA>(cloud, rgb, "registered point cloud");
+
+  // draw the normals
+  addCloudNormalsToViewer(viewer, normals_cloud, 2, blue, red, std::string("cloud"), std::string("normals"));
+
+  runViewer(viewer);
+}
+
+
 void Plot::plotNormals(const PointCloudRGBA::Ptr& cloud, const Eigen::Matrix3Xd& normals) const
 {		
   PointCloudNormal::Ptr normals_cloud(new PointCloudNormal);
@@ -166,8 +198,15 @@ void Plot::plotNormals(const PointCloudRGBA::Ptr& cloud, const Eigen::Matrix3Xd&
   double red[3] = {1.0, 0.0, 0.0};
   double blue[3] = {0.0, 0.0, 1.0};
 
-  boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer("Normals");  
+  boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer("Normals");
+
+  // draw the point cloud
+  pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> rgb(cloud);
+  viewer->addPointCloud<pcl::PointXYZRGBA>(cloud, rgb, "registered point cloud");
+
+  // draw the normals
   addCloudNormalsToViewer(viewer, normals_cloud, 2, blue, red, std::string("cloud"), std::string("normals"));
+
   runViewer(viewer);
 }
 

@@ -11,7 +11,8 @@ CandidatesGenerator::CandidatesGenerator(const Parameters& params,
 
 void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 {
-  const double VOXEL_SIZE = 0.003;
+  const double VOXEL_SIZE = 0.002;
+//  const double VOXEL_SIZE = 0.003;
 
   std::cout << "Processing cloud with: " << cloud_cam.getCloudOriginal()->size() << " points.\n";
 
@@ -54,10 +55,13 @@ void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
     // 3. Subsampling
     if (cloud_cam.getSamples().cols() > 0)
     {
-      // remove samples outside of the workspace
-      cloud_cam.filterSamples(params_.workspace_);
+      // 4. Calculate surface normals.
+	  if (cloud_cam.getNormals().cols() == 0)
+	  {
+		cloud_cam.calculateNormals(params_.num_threads_);
+	  }
 
-      // subsample the remaining samples
+      // 5. Subsample the remaining samples.
       cloud_cam.subsampleSamples(params_.num_samples_);
     }
     else
@@ -103,7 +107,18 @@ void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 
   if (params_.plot_normals_)
   {
-    plotter_.plotNormals(cloud_cam.getCloudProcessed()->getMatrixXfMap().cast<double>(), cloud_cam.getNormals());
+	// if (cloud_cam.getSamples().cols() == 0)
+	  plotter_.plotNormals(cloud_cam.getCloudProcessed(), cloud_cam.getNormals());
+	// else
+	// {
+//		PointCloudRGB::Ptr cloud_samples(new PointCloudRGB);
+//		cloud_samples->resize(cloud_cam.getSamples().cols());
+//		for (int i = 0; i < cloud_cam.getSamples().cols(); i++)
+//		{
+//			cloud_samples->at(i).getVector3fMap() = cloud_cam.getSamples().col(i).cast<float>();
+//		}
+//		plotter_.plotNormals(cloud_cam.getCloudProcessed(), cloud_samples, cloud_cam.getNormals());
+	// }
   }
 }
 

@@ -51,6 +51,7 @@
 #include <pcl/point_cloud.h>
 
 #include <grasp_candidates_generator/eigen_utils.h>
+#include <grasp_candidates_generator/plot.h>
 
 
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGB;

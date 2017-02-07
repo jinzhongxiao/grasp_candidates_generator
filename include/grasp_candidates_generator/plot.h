@@ -96,6 +96,8 @@ class Plot
      */
     void plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointCloudRGBA::Ptr& cloud) const;
 
+    void plotNormals(const PointCloudRGBA::Ptr& cloud, const PointCloudRGBA::Ptr& cloud_samples, const Eigen::Matrix3Xd& normals) const;
+
     /** 
      * \brief Plot a list of normals.
      * \param cloud the point cloud to be plotted
