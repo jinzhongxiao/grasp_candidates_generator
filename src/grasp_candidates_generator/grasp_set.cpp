@@ -87,9 +87,11 @@ void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame&
 
 Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double shadow_length) const
 {
+  bool measure_time = false;
+
   double voxel_grid_size = 0.003; // voxel size for points that fill occluded region
 
-  double num_shadow_points = floor(shadow_length / voxel_grid_size); // number of points in each shadow line
+  double num_shadow_points = floor(shadow_length / voxel_grid_size); // number of points along each shadow vector
 
   // Calculate the set of cameras which see the points.
   Eigen::VectorXi camera_set = point_list.getCamSource().rowwise().sum();
@@ -133,7 +135,10 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
   {
     // brute force intersection (TODO: speed this up)
     double t0_intersection = omp_get_wtime();
-    for (int i = 0; i < shadows.size(); ++i)
+
+    bins_all = shadows[0];
+
+    for (int i = 1; i < shadows.size(); ++i)
     {
       Vector3iSet::const_iterator it;
 
@@ -142,7 +147,8 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
         bins_all.insert(*it);
       }
     }
-    std::cout << "intersection runtime: " << omp_get_wtime() - t0_intersection << "s\n";
+    if (measure_time)
+      std::cout << "intersection runtime: " << omp_get_wtime() - t0_intersection << "s\n";
   }
 
   // Convert voxels back to points.
@@ -163,7 +169,8 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
     shadow_out.col(i)(2) += generator() * voxel_grid_size * 0.3;
     i++;
   }
-//  std::cout << "voxels-to-points runtime: " << omp_get_wtime() - t0_voxels << "s\n";
+  if (measure_time)
+    std::cout << "voxels-to-points runtime: " << omp_get_wtime() - t0_voxels << "s\n";
 
   return shadow_out;
 }
@@ -172,45 +179,128 @@ Eigen::Matrix3Xd GraspSet::calculateShadow(const PointList& point_list, double s
 Vector3iSet GraspSet::calculateVoxelizedShadowVectorized(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
   int num_shadow_points, double voxel_grid_size) const
 {
-  double t0_shadow = omp_get_wtime();
-  Eigen::Matrix3Xi shadows_mat(3, point_list.size() * num_shadow_points);
+//  double t0_shadow = omp_get_wtime();
 
   Eigen::internal::scalar_normal_dist_op<double> rand_uni; // Uniform functor
   Eigen::internal::scalar_normal_dist_op<double>::rng.seed(42u); // Seed the rng
 
-  const Eigen::Matrix3Xd shadow_vec_mat = shadow_vec.replicate(1, num_shadow_points);
+//  Eigen::MatrixXd X = point_list.getPoints().replicate(num_shadow_points,1);
+//  Eigen::MatrixXd V = shadow_vec.replicate(num_shadow_points, X.cols());
+//  Eigen::VectorXd r = Eigen::VectorXd::NullaryExpr(num_shadow_points * X.cols(), rand_uni);
+//  Eigen::MatrixXi S = ((X + V * r.asDiagonal()) / voxel_grid_size).unaryExpr(std::ptr_fun(floor)).cast<int>();
+
+  bool measure_time = false;
+
+  // works but slower than code below
+  bool skip = true;
+
+  if (skip==false)
+  {
+    double t0_mat = omp_get_wtime();
+    Eigen::MatrixXd X = point_list.getPoints().replicate(num_shadow_points,1);
+    Eigen::MatrixXd V = shadow_vec.replicate(num_shadow_points, X.cols());
+    Eigen::Matrix3Xd r = Eigen::RowVectorXd::NullaryExpr(num_shadow_points * X.cols(), rand_uni).replicate(3,1);
+    Eigen::MatrixXd R = Eigen::Map<Eigen::MatrixXd>(r.data(), num_shadow_points*3, X.cols());
+
+    Eigen::MatrixXi S = ((X + R.cwiseProduct(V)) / voxel_grid_size).unaryExpr(std::ptr_fun(floor)).cast<int>();
+    std::cout << "matrix calc runtime: " << omp_get_wtime() - t0_mat << "\n";
+
+  //
+  //  std::cout << "#pts: " << point_list.getPoints().cols() << "\n";
+  //  std::cout << "X: " << X.rows() << " x " <<  X.cols() << "\n";
+  //  std::cout << "V: " << V.rows() << " x " <<  V.cols() << "\n";
+  //  std::cout << "r: " << r.rows() << " x " <<  r.cols() << "\n";
+  ////  std::cout << "R: " << R.rows() << " x " <<  R.cols() << "\n";
+  //  std::cout << "------------\n";
+  //  std::cout << point_list.getPoints().col(0) << "\n";
+  //
+    double t0_set = omp_get_wtime();
+    Vector3iSet shadow_set;
+    shadow_set.reserve(point_list.size() * num_shadow_points);
+
+    for(int i = 0; i < point_list.size() * num_shadow_points; i++)
+    {
+      int row = i % num_shadow_points;
+      int col = i / num_shadow_points;
+      shadow_set.insert(S.block(row, col, 3, 1));
+    }
+    std::cout << "set constr runtime: " << omp_get_wtime() - t0_set << "\n";
+    std::cout << "-----------------------------------------------------\n";
+  }
+
+  // 40% faster than loop-based version
+  double t0_shadow = omp_get_wtime();
+  Eigen::Matrix3Xi shadows_mat(3, point_list.size() * num_shadow_points);
+  const Eigen::Matrix3Xd shadow_vec_mat = shadow_vec.replicate(1,num_shadow_points);
 
   for(int i = 0; i < point_list.size(); i++)
   {
+    const Eigen::VectorXd r = Eigen::VectorXd::NullaryExpr(num_shadow_points, rand_uni);
+    shadows_mat.block(0, i*num_shadow_points , 3, num_shadow_points)
+          = (((point_list.getPoints().col(i).replicate(1,num_shadow_points)
+//              + Eigen::RowVectorXd::NullaryExpr(num_shadow_points, rand_uni).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
+//              + shadow_vec.replicate(1,num_shadow_points) * r.asDiagonal()
+                + shadow_vec_mat * r.asDiagonal()
+              ) / voxel_grid_size).unaryViewExpr(std::ptr_fun(floor))).cast<int>();
+  }
+  if (measure_time)
+    std::cout << "Matrix calculation runtime: " << omp_get_wtime() - t0_shadow << "\n";
+
+  double t0_set = omp_get_wtime();
+  Vector3iSet shadow_set;
+//  shadow_set.clear();
+//  shadow_set.reserve(shadows_mat.cols()); // seems to take up a lot of time
+
+  for(int i = 0; i < shadows_mat.cols(); i++)
+  {
+    shadow_set.insert(shadows_mat.col(i));
+  }
+  if (measure_time)
+    std::cout << "Set construction runtime: " << omp_get_wtime() - t0_set << "\n";
+
+//  (shadows_mat.data()row(0)).data();
+//  std::vector<int> x(shadows_mat.row(0).data(), shadows_mat.row(0).data() + shadows_mat.cols());
+//  std::vector<int> y(shadows_mat.row(1).data(), shadows_mat.row(1).data() + shadows_mat.cols());
+//  std::vector<int> z(shadows_mat.row(2).data(), shadows_mat.row(2).data() + shadows_mat.cols());
+
+//  std::set<int> x(shadows_mat.row(0).data(), shadows_mat.row(0).data() + shadows_mat.cols());
+//  std::set<int> y(shadows_mat.row(1).data(), shadows_mat.row(1).data() + shadows_mat.cols());
+//  std::set<int> z(shadows_mat.row(2).data(), shadows_mat.row(2).data() + shadows_mat.cols());
+
+  if (skip == false)
+  {
+    t0_set = omp_get_wtime();
+    boost::unordered_set<int> x(shadows_mat.row(0).data(), shadows_mat.row(0).data() + shadows_mat.cols());
+    boost::unordered_set<int> y(shadows_mat.row(1).data(), shadows_mat.row(1).data() + shadows_mat.cols());
+    boost::unordered_set<int> z(shadows_mat.row(2).data(), shadows_mat.row(2).data() + shadows_mat.cols());
+    std::cout << "Set construction runtime NEW: " << omp_get_wtime() - t0_set << "\n";
+  }
+
+//  const Eigen::Matrix3Xd shadow_vec_mat = shadow_vec.replicate(1, num_shadow_points);
+
+//  for(int i = 0; i < point_list.size(); i++)
+//  {
 //    const Eigen::Vector3d& p = point_list.getPoints().col(i);
 //    Eigen::Matrix3Xd uni = ((Eigen::VectorXd::Random(num_shadow_points) + Eigen::VectorXd::Ones(num_shadow_points)) / 2.0).replicate(3,1);
 //    Eigen::Matrix3Xd shadow = p.replicate(1, num_shadow_points) + uni.cwiseProduct(shadow_vec.replicate(1, num_shadow_points));
 //    shadows_mat.block(0, i*num_shadow_points , 3, num_shadow_points) = (shadow / voxel_grid_size).unaryExpr(std::ptr_fun(floor)).cast<int>();
 
 //    const Eigen::Vector3d& p = point_list.getPoints().col(i);
-    shadows_mat.block(0, i*num_shadow_points , 3, num_shadow_points)
-      = (((point_list.getPoints().col(i).replicate(1,num_shadow_points)
+//    shadows_mat.block(0, i*num_shadow_points , 3, num_shadow_points)
+//      = (((point_list.getPoints().col(i).replicate(1,num_shadow_points)
+//          + Eigen::RowVectorXd::NullaryExpr(num_shadow_points, rand_uni).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
+//          ) / voxel_grid_size).unaryExpr(std::ptr_fun(floor))).cast<int>();
 //        + ((Eigen::VectorXd::Random(num_shadow_points) + Eigen::VectorXd::Ones(num_shadow_points)) / 2.0).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
 //        + (0.5 * Eigen::VectorXd::Random(num_shadow_points) + 0.5 * Eigen::VectorXd::Ones(num_shadow_points)).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
 //        + Eigen::VectorXd::NullaryExpr(num_shadow_points, rand_uni).transpose().replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
-//        + Eigen::RowVectorXd::NullaryExpr(num_shadow_points, rand_uni).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
-        + Eigen::RowVectorXd::NullaryExpr(num_shadow_points, rand_uni).replicate(3,1).cwiseProduct(shadow_vec_mat)
+
+//        + Eigen::RowVectorXd::NullaryExpr(num_shadow_points, rand_uni).replicate(3,1).cwiseProduct(shadow_vec_mat)
 //        + (Eigen::VectorXd::Random(num_shadow_points) * 0.5 + Eigen::VectorXd::Constant(0.5, num_shadow_points)).replicate(3,1).cwiseProduct(shadow_vec.replicate(1, num_shadow_points))
-         ) / voxel_grid_size).unaryExpr(std::ptr_fun(floor))).cast<int>();
+
 //    temp.unaryExpr(std::ptr_fun(floor));
 //    shadows_mat.block(0, i*num_shadow_points , 3, num_shadow_points) = temp;
-  }
+//  }
 //  std::cout << "Shadow calculation runtime: " << omp_get_wtime() - t0_shadow << "\n";
-
-  double t0_set = omp_get_wtime();
-  Vector3iSet shadow_set;
-  shadow_set.reserve(shadows_mat.cols());
-
-  for(int i = 0; i < shadows_mat.cols(); i++)
-  {
-    shadow_set.insert(shadows_mat.col(i));
-  }
-//  std::cout << "Set construction runtime: " << omp_get_wtime() - t0_set << "\n";
 
   return shadow_set;
 }
