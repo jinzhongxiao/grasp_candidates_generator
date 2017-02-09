@@ -42,10 +42,13 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/random/variate_generator.hpp>
+#include <boost/random/lagged_fibonacci.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/random/taus88.hpp>
 
 // Eigen
 #include <Eigen/Dense>
+#include <unsupported/Eigen/AlignedVector3>
 
 // Custom
 #include <grasp_candidates_generator/antipodal.h>
@@ -53,14 +56,15 @@
 #include <grasp_candidates_generator/grasp.h>
 #include <grasp_candidates_generator/local_frame.h>
 #include <grasp_candidates_generator/point_list.h>
+#include <grasp_candidates_generator/uniform_table.h>
 
 
 // The hash function below is necessary for boost's unordered set.
 namespace boost
 {
-template <>
-struct hash<Eigen::Vector3i>
-{
+  template <>
+  struct hash<Eigen::Vector3i>
+  {
     size_t operator()(Eigen::Vector3i const& v) const
     {
       std::size_t seed = 0;
@@ -72,7 +76,7 @@ struct hash<Eigen::Vector3i>
 
       return seed;
     }
-};
+  };
 }
 
 
@@ -87,7 +91,7 @@ template<typename Scalar>
 struct scalar_normal_dist_op
 {
   static boost::mt11213b rng;    // The uniform pseudo-random algorithm
-  mutable boost::uniform_01<Scalar> uni;  // The gaussian combinator
+  mutable boost::uniform_01<Scalar> uni;  // The uniform combinator
 
   EIGEN_EMPTY_STRUCT_CTOR(scalar_normal_dist_op)
 
@@ -111,6 +115,33 @@ class GraspSet
 {
   public:
 
+    /**
+     * \brief Comparator for checking uniqueness of two 3D-vectors.
+    */
+    struct UniqueVectorComparator
+    {
+      /**
+       * \brief Compares two 3D-vectors for uniqueness.
+       * \param a the first 3D-vector
+       * \param b the second 3D-vector
+       * \return true if they differ in at least one element, false if all elements are equal
+      */
+      bool operator ()(const Eigen::Vector3i& a, const Eigen::Vector3i& b)
+      {
+  //      return a(0) < b(0) && a(1) < b(1) && a(2) < b(2);
+
+        for (int i = 0; i < a.size(); i++)
+        {
+          if (a(i) != b(i))
+          {
+            return a(i) < b(i);
+          }
+        }
+
+        return false;
+      }
+    };
+
     /** robot hand geometry */
     struct HandGeometry
     {
@@ -128,14 +159,19 @@ class GraspSet
           height_(hand_height), init_bite_(init_bite) {  }
     };
 
+    static void initUniformTable(int size);
+
     GraspSet();
 
-    GraspSet(const HandGeometry& hand_geometry, const Eigen::VectorXd& angles, int rotation_axis)
-      : hand_geometry_(hand_geometry), angles_(angles), rotation_axis_(rotation_axis) { }
+    GraspSet(const HandGeometry& hand_geometry, const Eigen::VectorXd& angles, int rotation_axis);
 
     void evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame);
 
     Eigen::Matrix3Xd calculateShadow(const PointList& point_list, double shadow_length) const;
+
+    Eigen::Matrix3Xd calculateShadow2(const PointList& point_list, double shadow_length) const;
+
+    Eigen::Matrix3Xd calculateShadow4(const PointList& point_list, double shadow_length) const;
 
     const std::vector<Grasp>& getHypotheses() const
     {
@@ -178,6 +214,15 @@ class GraspSet
     Vector3iSet calculateVoxelizedShadowLoop(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
       int num_shadow_points, double voxel_grid_size) const;
 
+    std::vector<Eigen::Vector3i> calculateVoxelizedShadowVectorized2(const PointList& point_list,
+      const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size) const;
+
+    std::vector<Eigen::Vector3i> calculateVoxelizedShadowVectorized3(const PointList& point_list,
+      const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size, int table_counter = 0) const;
+
+    Vector3iSet calculateVoxelizedShadowVectorized4(const PointList& point_list,
+      const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size) const;
+
     Vector3iSet calculateVoxelizedShadowVectorized(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
       int num_shadow_points, double voxel_grid_size) const;
 
@@ -188,6 +233,17 @@ class GraspSet
 
     void labelHypothesis(const PointList& point_list, const FingerHand& finger_hand, Grasp& hand) const;
 
+    std::vector<double> createUniformTable(int size) const;
+
+    void intersection(const Vector3iSet& set1, const Vector3iSet& set2, Vector3iSet &set_out) const;
+
+    inline int fastrand() const;
+
+    /**
+     * source: http://software.intel.com/en-us/articles/fast-random-number-generator-on-the-intel-pentiumr-4-processor/
+     */
+    static unsigned int seed_;
+
     Eigen::Vector3d sample_;
     std::vector<Grasp> hands_;
     Eigen::Array<bool, 1, Eigen::Dynamic> is_valid_;
@@ -196,10 +252,16 @@ class GraspSet
     HandGeometry hand_geometry_; ///< the robot hand geometry
     int rotation_axis_; ///< the axis about which the hand frame is rotated to generate different orientations
 
+    static std::vector<double> uniform_table_;
+
+    static UniformTable uni_table_;
+
     /** constants for rotation axis */
     static const int ROTATION_AXIS_NORMAL; ///< normal axis of local reference frame
     static const int ROTATION_AXIS_BINORMAL; ///< binormal axis of local reference frame
     static const int ROTATION_AXIS_CURVATURE_AXIS; ///< curvature axis of local reference frame
+
+    static const bool MEASURE_TIME;
 };
 
 #endif /* GRASP_SET_H_ */

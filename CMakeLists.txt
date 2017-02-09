@@ -13,6 +13,8 @@ add_definitions(${PCL_DEFINITIONS})
 
 ## Set compiler optimization flags
 set(CMAKE_CXX_FLAGS "-O3 -fopenmp -fPIC -Wno-deprecated -Wenum-compare")
+# set(CMAKE_CXX_FLAGS "-O3 -fopenmp -march=native -mfpmath=sse -funroll-loops -fPIC -Wno-deprecated -Wenum-compare") # no improvement
+# set(CMAKE_CXX_FLAGS "-frename-registers -Ofast -march=native -fopenmp -fPIC -Wno-deprecated -Wenum-compare") # no improvement
  
 # Add the headers from the <include> directory
 include_directories(include)
@@ -33,6 +35,7 @@ add_library(${PROJECT_NAME}_hand_search src/${PROJECT_NAME}/hand_search.cpp)
 add_library(${PROJECT_NAME}_local_frame src/${PROJECT_NAME}/local_frame.cpp)
 add_library(${PROJECT_NAME}_plot src/${PROJECT_NAME}/plot.cpp)
 add_library(${PROJECT_NAME}_point_list src/${PROJECT_NAME}/point_list.cpp)
+add_library(${PROJECT_NAME}_uniform_table src/${PROJECT_NAME}/uniform_table.cpp)
 
 # This executable is for testing the shared library
 add_executable(${PROJECT_NAME}_generate_candidates src/generate_candidates.cpp)
@@ -77,7 +80,8 @@ target_link_libraries(${PROJECT_NAME}_local_frame
 
 target_link_libraries(${PROJECT_NAME}_plot 
                       ${PROJECT_NAME}_grasp_set 
-                      ${PROJECT_NAME}_local_frame)
+                      ${PROJECT_NAME}_local_frame 
+                      ${PROJECT_NAME}_uniform_table)
 
 target_link_libraries(${PROJECT_NAME}_grasp_candidates_generator 
                       ${PROJECT_NAME}_hand_search)

@@ -5,6 +5,10 @@ CandidatesGenerator::CandidatesGenerator(const Parameters& params,
   const HandSearch::Parameters& hand_search_params) : params_(params)
 {
   Eigen::initParallel();
+
+  std::cout << "Generating X uniformly distributed random numbers\n";
+  GraspSet::initUniformTable(5000000);
+
   hand_search_ = new HandSearch(hand_search_params);
 }
 
