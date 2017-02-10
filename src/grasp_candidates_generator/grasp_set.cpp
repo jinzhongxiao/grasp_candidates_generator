@@ -359,27 +359,8 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
   if (shadows.size() == 1)
   {
     // Convert voxels back to points.
-    double t0_voxels = omp_get_wtime();
-    boost::mt19937 *rng = new boost::mt19937();
-    rng->seed(time(NULL));
-    boost::normal_distribution<> distribution(0.0, 1.0);
-    boost::variate_generator<boost::mt19937, boost::normal_distribution<> > generator(*rng, distribution);
-
-    std::vector<Eigen::Vector3i> V(shadows[0].begin(), shadows[0].end());
-
-    Eigen::Matrix3Xd shadow_out(3, V.size());
-
-    for (int i = 0; i < V.size(); i++)
-    {
-      shadow_out.col(i) = V[i].cast<double>() * voxel_grid_size;
-      shadow_out.col(i)(0) += generator() * voxel_grid_size * 0.3;
-      shadow_out.col(i)(1) += generator() * voxel_grid_size * 0.3;
-      shadow_out.col(i)(2) += generator() * voxel_grid_size * 0.3;
-      i++;
-    }
-    if (MEASURE_TIME)
-      std::cout << "voxels-to-points runtime: " << omp_get_wtime() - t0_voxels << "s\n";
-
+    std::vector<Eigen::Vector3i> voxels(shadows[0].begin(), shadows[0].end());
+    Eigen::Matrix3Xd shadow_out = shadowVoxelsToPoints(voxels, voxel_grid_size);
     return shadow_out;
   }
 
@@ -395,59 +376,48 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
     std::cout << "intersection runtime: " << omp_get_wtime() - t0_intersection << "s\n";
 
   // Convert voxels back to points.
+  std::vector<Eigen::Vector3i> voxels(bins_all.begin(), bins_all.end());
+  Eigen::Matrix3Xd shadow_out = shadowVoxelsToPoints(voxels, voxel_grid_size);
+  return shadow_out;
+}
+
+
+Eigen::Matrix3Xd GraspSet::shadowVoxelsToPoints(const std::vector<Eigen::Vector3i>& voxels, double voxel_grid_size) const
+{
+  // Convert voxels back to points.
   double t0_voxels = omp_get_wtime();
   boost::mt19937 *rng = new boost::mt19937();
   rng->seed(time(NULL));
   boost::normal_distribution<> distribution(0.0, 1.0);
   boost::variate_generator<boost::mt19937, boost::normal_distribution<> > generator(*rng, distribution);
 
-  std::vector<Eigen::Vector3i> V(bins_all.begin(), bins_all.end());
+  Eigen::Matrix3Xd shadow(3, voxels.size());
 
-  Eigen::Matrix3Xd shadow_out(3, bins_all.size());
-
-  for (int i = 0; i < V.size(); i++)
+  for (int i = 0; i < voxels.size(); i++)
   {
-    shadow_out.col(i) = V[i].cast<double>() * voxel_grid_size;
-    shadow_out.col(i)(0) += generator() * voxel_grid_size * 0.3;
-    shadow_out.col(i)(1) += generator() * voxel_grid_size * 0.3;
-    shadow_out.col(i)(2) += generator() * voxel_grid_size * 0.3;
-    i++;
+    shadow.col(i) = voxels[i].cast<double>() * voxel_grid_size + Eigen::Vector3d::Ones() * generator()
+      * voxel_grid_size * 0.3;
+//    shadow.col(i) = voxels[i].cast<double>() * voxel_grid_size;
+//    shadow.col(i)(0) += generator() * voxel_grid_size * 0.3;
+//    shadow.col(i)(1) += generator() * voxel_grid_size * 0.3;
+//    shadow.col(i)(2) += generator() * voxel_grid_size * 0.3;
   }
   if (MEASURE_TIME)
     std::cout << "voxels-to-points runtime: " << omp_get_wtime() - t0_voxels << "s\n";
 
-  return shadow_out;
+  return shadow;
 }
 
 
 Vector3iSet GraspSet::calculateVoxelizedShadowVectorized4(const PointList& point_list,
   const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size) const
 {
-//  double t0_matrix = omp_get_wtime();
-//  const Eigen::VectorXd r = Eigen::VectorXd::Constant(num_shadow_points * point_list.size(), 0.5) + 0.5 * Eigen::VectorXd::Random(num_shadow_points * point_list.size());
-//  Eigen::MatrixXi S = ((point_list.getPoints().replicate(num_shadow_points,1) + shadow_vec.replicate(num_shadow_points, point_list.size()) * r.asDiagonal()) / voxel_grid_size).unaryExpr(std::ptr_fun(floor)).cast<int>();
-//  if (MEASURE_TIME)
-//  {
-//    std::cout << "matrix -- calculateVoxelizedShadowVectorized4 runtime: " << omp_get_wtime() - t0_matrix << "\n";
-//    std::cout << "r: " << r.rows() << ", S: " << S.rows() << " x " << S.cols() << "\n";
-//  }
-
-  // Create generator for uniform random numbers.
-//  boost::mt11213b generator(42u);
-//  boost::uniform_01<> uni_dist;
-//  boost::variate_generator<boost::random::mt11213b&, boost::uniform_01<> > uni(generator, uni_dist);
-
   double t0_set = omp_get_wtime();
   const int n = point_list.size() * num_shadow_points;
 
   Vector3iSet shadow_set(n);
   const double voxel_grid_size_mult = 1.0 / voxel_grid_size;
-//  const double max = 1.0 / ((double) RAND_MAX + 1);
-//  const double max = 1.0 / (double) RAND_MAX;
   const double max = 1.0 / 32767.0;
-//  std::cout << "RAND_MAX: " << RAND_MAX << "\n";
-  if (MEASURE_TIME)
-    std::cout << "beforeloop -- calculateVoxelizedShadowVectorized4 runtime: " << omp_get_wtime() - t0_set << "\n";
 
   for(int i = 0; i < n; i++)
   {

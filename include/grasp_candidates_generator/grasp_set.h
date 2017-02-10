@@ -235,6 +235,8 @@ class GraspSet
 
     std::vector<double> createUniformTable(int size) const;
 
+    Eigen::Matrix3Xd shadowVoxelsToPoints(const std::vector<Eigen::Vector3i>& voxels, double voxel_grid_size) const;
+
     void intersection(const Vector3iSet& set1, const Vector3iSet& set2, Vector3iSet &set_out) const;
 
     inline int fastrand() const;
