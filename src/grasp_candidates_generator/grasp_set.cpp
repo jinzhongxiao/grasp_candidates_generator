@@ -9,8 +9,6 @@ const bool GraspSet::MEASURE_TIME = false;
 
 std::vector<double> GraspSet::uniform_table_ = std::vector<double>(0);
 
-UniformTable GraspSet::uni_table_(1000000);
-
 unsigned int GraspSet::seed_ = 4;
 
 const double MAX = (double) (((214013)>>16)&0x7FFF);
@@ -336,7 +334,7 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
 
   // Stores the list of all bins of the voxelized, occluded points.
   std::vector< Vector3iSet > shadows;
-  shadows.resize(camera_set.rows());
+  shadows.resize(camera_set.rows(), Vector3iSet(num_shadow_points * 10000));
 
   for (int i = 0; i < camera_set.rows(); i++)
   {
@@ -351,7 +349,8 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
       shadow_vec = shadow_length * shadow_vec / shadow_vec.norm();
 
       // Calculate occluded points.
-      shadows[i] = calculateVoxelizedShadowVectorized4(point_list, shadow_vec, num_shadow_points, voxel_grid_size);
+//      shadows[i] = calculateVoxelizedShadowVectorized4(point_list, shadow_vec, num_shadow_points, voxel_grid_size);
+      calculateVoxelizedShadowVectorized4(point_list.getPoints(), shadow_vec, num_shadow_points, voxel_grid_size, shadows[i]);
     }
   }
 
@@ -359,9 +358,10 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
   if (shadows.size() == 1)
   {
     // Convert voxels back to points.
-    std::vector<Eigen::Vector3i> voxels(shadows[0].begin(), shadows[0].end());
-    Eigen::Matrix3Xd shadow_out = shadowVoxelsToPoints(voxels, voxel_grid_size);
-    return shadow_out;
+//    std::vector<Eigen::Vector3i> voxels(shadows[0].begin(), shadows[0].end());
+//    Eigen::Matrix3Xd shadow_out = shadowVoxelsToPoints(voxels, voxel_grid_size);
+//    return shadow_out;
+    return shadowVoxelsToPoints(std::vector<Eigen::Vector3i>(shadows[0].begin(), shadows[0].end()), voxel_grid_size);
   }
 
   // Multiple camera view points: find the intersection of all sets of occluded points.
@@ -409,27 +409,28 @@ Eigen::Matrix3Xd GraspSet::shadowVoxelsToPoints(const std::vector<Eigen::Vector3
 }
 
 
-Vector3iSet GraspSet::calculateVoxelizedShadowVectorized4(const PointList& point_list,
-  const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size) const
+void GraspSet::calculateVoxelizedShadowVectorized4(const Eigen::Matrix3Xd& points,
+  const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size, Vector3iSet& shadow_set) const
 {
   double t0_set = omp_get_wtime();
-  const int n = point_list.size() * num_shadow_points;
-
-  Vector3iSet shadow_set(n);
+  const int n = points.cols() * num_shadow_points;
   const double voxel_grid_size_mult = 1.0 / voxel_grid_size;
   const double max = 1.0 / 32767.0;
+  Eigen::Vector3d w;
 
   for(int i = 0; i < n; i++)
   {
     const int pt_idx = i / num_shadow_points;
-    const Eigen::Vector3d w = (point_list.getPoints().col(pt_idx) + ((double) fastrand() * max) * shadow_vec) * voxel_grid_size_mult;
-    shadow_set.insert(Eigen::Vector3i(floor(w(0)), floor(w(1)), floor(w(2))));
+//    const Eigen::Vector3d w = (points.col(pt_idx) + ((double) fastrand() * max) * shadow_vec) * voxel_grid_size_mult;
+//    shadow_set.insert(Eigen::Vector3i(floor(w(0)), floor(w(1)), floor(w(2))));
+    w = (points.col(pt_idx) + ((double) fastrand() * max) * shadow_vec) * voxel_grid_size_mult;
+    shadow_set.insert(Eigen::Vector3i(w(0), w(1), w(2)));
   }
 
   if (MEASURE_TIME)
     std::cout << "calculateVoxelizedShadowVectorized4 runtime: " << omp_get_wtime() - t0_set << "\n";
 
-  return shadow_set;
+//  return shadow_set;
 }
 
 
@@ -769,6 +770,15 @@ Eigen::VectorXi GraspSet::floorVector(const Eigen::VectorXd& a) const
 }
 
 
+inline void GraspSet::floorVector(Eigen::Vector3d& a) const
+{
+  for (int i = 0; i < a.size(); i++)
+  {
+    a(i) = floor((double) a(i));
+  }
+}
+
+
 Grasp GraspSet::createHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
   const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const
 {
@@ -817,25 +827,6 @@ inline int GraspSet::fastrand() const
 {
   seed_ = (214013*seed_+2531011);
   return (seed_>>16)&0x7FFF;
-}
-
-
-std::vector<double> GraspSet::createUniformTable(int size) const
-{
-  // Create generator for uniform random numbers.
-  boost::mt11213b generator(42u);
-  boost::uniform_01<> uni_dist;
-  boost::variate_generator<boost::mt11213b&, boost::uniform_01<> > uni(generator, uni_dist);
-
-  std::vector<double> table;
-  table.resize(size);
-
-  for (int i = 0; i < size; i++)
-  {
-    table[i] = uni();
-  }
-
-  return table;
 }
 
 
