@@ -6,17 +6,14 @@ CandidatesGenerator::CandidatesGenerator(const Parameters& params,
 {
   Eigen::initParallel();
 
-  std::cout << "Generating X uniformly distributed random numbers\n";
-  GraspSet::initUniformTable(5000000);
-
   hand_search_ = new HandSearch(hand_search_params);
 }
 
 
 void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 {
-  const double VOXEL_SIZE = 0.002;
-//  const double VOXEL_SIZE = 0.003;
+//  const double VOXEL_SIZE = 0.002;
+  const double VOXEL_SIZE = 0.003;
 
   std::cout << "Processing cloud with: " << cloud_cam.getCloudOriginal()->size() << " points.\n";
 

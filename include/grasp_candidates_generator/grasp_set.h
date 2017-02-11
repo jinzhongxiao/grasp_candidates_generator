@@ -59,7 +59,7 @@
 #include <grasp_candidates_generator/point_list.h>
 
 
-// The hash function below is necessary for boost's unordered set.
+// The hash and equality functions below are necessary for boost's unordered set.
 namespace boost
 {
 template <>
@@ -86,35 +86,6 @@ struct Vector3iEqual
       return a(0) == b(0) && a(1) == b(1) && a(2) == b(2);
     }
 };
-
-
-/*
-  We need a functor that can pretend it's const,
-  but to be a good random number generator
-  it needs mutable state.
- */
-namespace Eigen {
-namespace internal {
-template<typename Scalar>
-struct scalar_normal_dist_op
-{
-    static boost::mt11213b rng;    // The uniform pseudo-random algorithm
-    mutable boost::uniform_01<Scalar> uni;  // The uniform combinator
-
-    EIGEN_EMPTY_STRUCT_CTOR(scalar_normal_dist_op)
-
-    template<typename Index>
-    inline const Scalar operator() (Index, Index = 0) const { return uni(rng); }
-};
-
-template<typename Scalar> boost::mt11213b scalar_normal_dist_op<Scalar>::rng;
-
-template<typename Scalar>
-struct functor_traits<scalar_normal_dist_op<Scalar> >
-{ enum { Cost = 500 * NumTraits<Scalar>::MulCost, PacketAccess = false, IsRepeatable = false }; };
-} // end namespace internal
-} // end namespace Eigen
-
 
 typedef boost::unordered_set<Eigen::Vector3i, boost::hash<Eigen::Vector3i>, Vector3iEqual,
   std::allocator<Eigen::Vector3i> > Vector3iSet;
@@ -168,17 +139,11 @@ class GraspSet
           height_(hand_height), init_bite_(init_bite) {  }
     };
 
-    static void initUniformTable(int size);
-
     GraspSet();
 
     GraspSet(const HandGeometry& hand_geometry, const Eigen::VectorXd& angles, int rotation_axis);
 
     void evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame);
-
-    Eigen::Matrix3Xd calculateShadow(const PointList& point_list, double shadow_length) const;
-
-    Eigen::Matrix3Xd calculateShadow2(const PointList& point_list, double shadow_length) const;
 
     Eigen::Matrix3Xd calculateShadow4(const PointList& point_list, double shadow_length) const;
 
@@ -220,20 +185,8 @@ class GraspSet
 
   private:
 
-    Vector3iSet calculateVoxelizedShadowLoop(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
-      int num_shadow_points, double voxel_grid_size) const;
-
-    std::vector<Eigen::Vector3i> calculateVoxelizedShadowVectorized2(const PointList& point_list,
-      const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size) const;
-
-    std::vector<Eigen::Vector3i> calculateVoxelizedShadowVectorized3(const PointList& point_list,
-      const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size, int table_counter = 0) const;
-
     void calculateVoxelizedShadowVectorized4(const Eigen::Matrix3Xd& points,
       const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size, Vector3iSet& shadow_set) const;
-
-    Vector3iSet calculateVoxelizedShadowVectorized(const PointList& point_list, const Eigen::Vector3d& shadow_vec,
-      int num_shadow_points, double voxel_grid_size) const;
 
     Eigen::VectorXi floorVector(const Eigen::VectorXd& a) const;
 
@@ -253,8 +206,6 @@ class GraspSet
 
     inline void floorVector(Eigen::Vector3d& a) const;
 
-    static unsigned int seed_;
-
     Eigen::Vector3d sample_;
     std::vector<Grasp> hands_;
     Eigen::Array<bool, 1, Eigen::Dynamic> is_valid_;
@@ -263,7 +214,7 @@ class GraspSet
     HandGeometry hand_geometry_; ///< the robot hand geometry
     int rotation_axis_; ///< the axis about which the hand frame is rotated to generate different orientations
 
-    static std::vector<double> uniform_table_;
+    static int seed_; ///< seed for the random generator in fastrand()
 
     /** constants for rotation axis */
     static const int ROTATION_AXIS_NORMAL; ///< normal axis of local reference frame
