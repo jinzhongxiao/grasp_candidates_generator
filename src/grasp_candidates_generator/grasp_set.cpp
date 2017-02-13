@@ -151,7 +151,7 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
 
   for (int i = 1; i < shadows.size(); i++)
   {
-    intersection(bins_all, shadows[i], bins_all);
+	bins_all = intersection(bins_all, shadows[i]);
   }
   if (MEASURE_TIME)
     std::cout << "intersection runtime: " << omp_get_wtime() - t0_intersection << "s\n";
@@ -207,7 +207,9 @@ void GraspSet::calculateVoxelizedShadowVectorized4(const Eigen::Matrix3Xd& point
   }
 
   if (MEASURE_TIME)
-    std::cout << "calculateVoxelizedShadowVectorized4 runtime: " << omp_get_wtime() - t0_set << "\n";
+	printf("Shadow (1 camera) calculation. Runtime: %.3f, #points: %d, num_shadow_points: %d, #shadow: %d, max #shadow: %d\n",
+	  omp_get_wtime() - t0_set, points.cols(), num_shadow_points, shadow_set.size(), n);
+//    std::cout << "Calculated shadow for 1 camera. Runtime: " << omp_get_wtime() - t0_set << ", #points: " << n << "\n";
 }
 
 
@@ -269,15 +271,14 @@ inline int GraspSet::fastrand() const
 }
 
 
-void GraspSet::intersection(const Vector3iSet& set1, const Vector3iSet& set2, Vector3iSet &set_out) const
+Vector3iSet GraspSet::intersection(const Vector3iSet& set1, const Vector3iSet& set2) const
 {
-  set_out.clear();
-
   if (set2.size() < set1.size())
   {
-    intersection(set2, set1, set_out);
-    return;
+    return intersection(set2, set1);
   }
+
+  Vector3iSet set_out(set1.size());
 
   for (Vector3iSet::const_iterator it = set1.begin(); it != set1.end(); it++)
   {
@@ -286,4 +287,6 @@ void GraspSet::intersection(const Vector3iSet& set1, const Vector3iSet& set2, Ve
       set_out.insert(*it);
     }
   }
+
+  return set_out;
 }

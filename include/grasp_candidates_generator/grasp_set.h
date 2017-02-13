@@ -197,7 +197,7 @@ class GraspSet
 
     Eigen::Matrix3Xd shadowVoxelsToPoints(const std::vector<Eigen::Vector3i>& voxels, double voxel_grid_size) const;
 
-    void intersection(const Vector3iSet& set1, const Vector3iSet& set2, Vector3iSet &set_out) const;
+    Vector3iSet intersection(const Vector3iSet& set1, const Vector3iSet& set2) const;
 
     /**
      * source: http://software.intel.com/en-us/articles/fast-random-number-generator-on-the-intel-pentiumr-4-processor/
