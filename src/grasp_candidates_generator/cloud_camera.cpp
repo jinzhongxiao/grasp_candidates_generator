@@ -423,41 +423,41 @@ void CloudCamera::calculateNormals(int num_threads)
   // }
 
   // reverse direction of normals (if a normal does not point to at least one camera)
-//  if (view_points_.cols() > 1)
-//  {
-//    std::cout << "Reversing normals that do not point to at least 1 camera ...\n";
-//    std::cout << view_points_ << "\n";
-//    std::cout << "camera_source: " << camera_source_.rows() << " x " << camera_source_.cols() << ", points: " << cloud_processed_->size() << ", normals: " << normals_.cols() << "\n";
-//    int c = 0;
-//
-//    for (int i = 0; i < normals_.cols(); i++)
-//    {
-//      bool needs_reverse = true;
-//
-//      for (int j = 0; j < view_points_.cols(); j++)
-//      {
-//        if (camera_source_(j,i) == 1) // point is seen by this camera
-//        {
-//          Eigen::Vector3d cam_to_point = cloud_processed_->at(i).getVector3fMap().cast<double>() - view_points_.col(j);
-//
-//          if (normals_.col(i).dot(cam_to_point) < 0) // normal points toward camera
-//          {
-//            needs_reverse = false;
-//            break;
-//          }
-//        }
-//      }
-//
-//      if (needs_reverse)
-//      {
-//        normals_.col(i) *= -1.0;
-//        c++;
-//      }
-//    }
-//
-//    std::cout << " reversed " << c << " normals\n";
-//    std::cout << " runtime (reverse normals): " << omp_get_wtime() - t1 << "\n";
-//  }
+ if (view_points_.cols() > 1)
+ {
+   std::cout << "Reversing normals that do not point to at least 1 camera ...\n";
+   std::cout << view_points_ << "\n";
+   std::cout << "camera_source: " << camera_source_.rows() << " x " << camera_source_.cols() << ", points: " << cloud_processed_->size() << ", normals: " << normals_.cols() << "\n";
+   int c = 0;
+
+   for (int i = 0; i < normals_.cols(); i++)
+   {
+     bool needs_reverse = true;
+
+     for (int j = 0; j < view_points_.cols(); j++)
+     {
+       if (camera_source_(j,i) == 1) // point is seen by this camera
+       {
+         Eigen::Vector3d cam_to_point = cloud_processed_->at(i).getVector3fMap().cast<double>() - view_points_.col(j);
+
+         if (normals_.col(i).dot(cam_to_point) < 0) // normal points toward camera
+         {
+           needs_reverse = false;
+           break;
+         }
+       }
+     }
+
+     if (needs_reverse)
+     {
+       normals_.col(i) *= -1.0;
+       c++;
+     }
+   }
+
+   std::cout << " reversed " << c << " normals\n";
+   std::cout << " runtime (reverse normals): " << omp_get_wtime() - t1 << "\n";
+ }
 }
 
 
