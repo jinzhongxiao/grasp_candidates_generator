@@ -36,6 +36,7 @@
 
 #include <pcl/visualization/pcl_visualizer.h>
 
+#include <grasp_candidates_generator/cloud_camera.h>
 #include <grasp_candidates_generator/grasp.h>
 #include <grasp_candidates_generator/grasp_set.h>
 #include <grasp_candidates_generator/local_frame.h>
@@ -95,6 +96,8 @@ class Plot
      * \param cloud the point cloud to be plotted
      */
     void plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointCloudRGBA::Ptr& cloud) const;
+
+    void plotNormals(const CloudCamera& cloud_cam);
 
     void plotNormals(const PointCloudRGBA::Ptr& cloud, const PointCloudRGBA::Ptr& cloud_samples, const Eigen::Matrix3Xd& normals) const;
 

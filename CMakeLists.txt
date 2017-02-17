@@ -48,7 +48,6 @@ target_link_libraries(${PROJECT_NAME}_antipodal
 
 target_link_libraries(${PROJECT_NAME}_cloud_camera 
                       ${PROJECT_NAME}_eigen_utils 
-                      ${PROJECT_NAME}_plot 
                       ${PCL_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME}_eigen_utils 
@@ -78,6 +77,7 @@ target_link_libraries(${PROJECT_NAME}_local_frame
                       ${PCL_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME}_plot 
+                      ${PROJECT_NAME}_cloud_camera 
                       ${PROJECT_NAME}_grasp_set 
                       ${PROJECT_NAME}_local_frame)
 

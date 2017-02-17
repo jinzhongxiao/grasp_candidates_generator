@@ -147,6 +147,61 @@ void Plot::plotSamples(const PointCloudRGBA::Ptr& samples_cloud, const PointClou
 }
 
 
+void Plot::plotNormals(const CloudCamera& cloud_cam)
+{
+  const int num_clouds = cloud_cam.getViewPoints().cols();
+  std::vector<PointCloudNormal::Ptr> clouds;
+  clouds.resize(num_clouds);
+
+  for (int i = 0; i < num_clouds; i++)
+  {
+    PointCloudNormal::Ptr cloud(new PointCloudNormal);
+    clouds[i] = cloud;
+  }
+
+  for (int i = 0; i < cloud_cam.getNormals().cols(); i++)
+  {
+    pcl::PointNormal p;
+    p.x = cloud_cam.getCloudProcessed()->points[i].x;
+    p.y = cloud_cam.getCloudProcessed()->points[i].y;
+    p.z = cloud_cam.getCloudProcessed()->points[i].z;
+    p.normal_x = cloud_cam.getNormals()(0,i);
+    p.normal_y = cloud_cam.getNormals()(1,i);
+    p.normal_z = cloud_cam.getNormals()(2,i);
+
+    for (int j = 0; j < cloud_cam.getCameraSource().rows(); j++)
+    {
+      if (cloud_cam.getCameraSource()(j,i) == 1)
+      {
+        clouds[j]->push_back(p);
+      }
+    }
+  }
+
+  double colors[6][3] = {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 1.0, 0.0}, {1.0, 0.0, 1.0},
+    {0.0, 1.0, 1.0}};
+  double normal_colors[6][3] = {{0.5, 0.0, 0.0}, {0.0, 0.5, 0.0}, {0.0, 0.0, 0.5}, {0.5, 0.5, 0.0}, {0.5, 0.0, 0.5},
+    {0.0, 0.5, 0.5}};
+
+  boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = createViewer("Normals");
+  viewer->setBackgroundColor(0.1, 0.1, 0.1);
+  for (int i = 0; i < num_clouds; i++)
+  {
+    std::string cloud_name = "cloud_" + boost::lexical_cast<std::string>(i);
+    std::string normals_name = "normals_" + boost::lexical_cast<std::string>(i);
+    int color_id = i % 6;
+    viewer->addPointCloud<pcl::PointNormal>(clouds[i], cloud_name);
+    viewer->addPointCloudNormals<pcl::PointNormal>(clouds[i], 1, 0.01, normals_name);
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, colors[color_id][0],
+      colors[color_id][1], colors[color_id][2], cloud_name);
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, normal_colors[color_id][0],
+      normal_colors[color_id][1], normal_colors[color_id][2], normals_name);
+  }
+
+  runViewer(viewer);
+}
+
+
 void Plot::plotNormals(const PointCloudRGBA::Ptr& cloud, const PointCloudRGBA::Ptr& cloud_samples, const Eigen::Matrix3Xd& normals) const
 {
   PointCloudNormal::Ptr normals_cloud(new PointCloudNormal);

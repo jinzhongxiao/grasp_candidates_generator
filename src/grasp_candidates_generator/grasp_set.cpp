@@ -22,7 +22,7 @@ GraspSet::GraspSet() : rotation_axis_(-1)
 
 
 GraspSet::GraspSet(const HandGeometry& hand_geometry, const Eigen::VectorXd& angles, int rotation_axis)
-  : hand_geometry_(hand_geometry), angles_(angles), rotation_axis_(rotation_axis)
+: hand_geometry_(hand_geometry), angles_(angles), rotation_axis_(rotation_axis)
 {
   sample_.setZero();
   hands_.resize(0);
@@ -47,8 +47,8 @@ void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame&
 
     // Rotation about binormal by 180 degrees (reverses direction of normal)
     rot_binormal <<  -1.0,  0.0,  0.0,
-                      0.0,  1.0,  0.0,
-                      0.0,  0.0, -1.0;
+      0.0,  1.0,  0.0,
+      0.0,  0.0, -1.0;
   }
 
   // Local reference frame
@@ -61,8 +61,8 @@ void GraspSet::evaluateHypotheses(const PointList& point_list, const LocalFrame&
     // Rotation about curvature axis by <angles_(i)> radians
     Eigen::Matrix3d rot;
     rot <<  cos(angles_(i)),  -1.0 * sin(angles_(i)),   0.0,
-            sin(angles_(i)),  cos(angles_(i)),          0.0,
-            0.0,              0.0,                      1.0;
+      sin(angles_(i)),  cos(angles_(i)),          0.0,
+      0.0,              0.0,                      1.0;
 
     // Rotate points into this hand orientation.
     Eigen::Matrix3d frame_rot;
@@ -106,6 +106,8 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
 
   double num_shadow_points = floor(shadow_length / voxel_grid_size); // number of points along each shadow vector
 
+  const int num_cams = point_list.getCamSource().rows();
+
   // Calculate the set of cameras which see the points.
   Eigen::VectorXi camera_set = point_list.getCamSource().rowwise().sum();
 
@@ -115,9 +117,9 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
 
   // Stores the list of all bins of the voxelized, occluded points.
   std::vector< Vector3iSet > shadows;
-  shadows.resize(camera_set.rows(), Vector3iSet(num_shadow_points * 10000));
+  shadows.resize(num_cams, Vector3iSet(num_shadow_points * 10000));
 
-  for (int i = 0; i < camera_set.rows(); i++)
+  for (int i = 0; i < num_cams; i++)
   {
     if (camera_set(i) >= 1)
     {
@@ -130,18 +132,18 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
       shadow_vec = shadow_length * shadow_vec / shadow_vec.norm();
 
       // Calculate occluded points.
-//      shadows[i] = calculateVoxelizedShadowVectorized4(point_list, shadow_vec, num_shadow_points, voxel_grid_size);
+      //      shadows[i] = calculateVoxelizedShadowVectorized4(point_list, shadow_vec, num_shadow_points, voxel_grid_size);
       calculateVoxelizedShadowVectorized4(point_list.getPoints(), shadow_vec, num_shadow_points, voxel_grid_size, shadows[i]);
     }
   }
 
   // Only one camera view point.
-  if (shadows.size() == 1)
+  if (num_cams == 1)
   {
     // Convert voxels back to points.
-//    std::vector<Eigen::Vector3i> voxels(shadows[0].begin(), shadows[0].end());
-//    Eigen::Matrix3Xd shadow_out = shadowVoxelsToPoints(voxels, voxel_grid_size);
-//    return shadow_out;
+    //    std::vector<Eigen::Vector3i> voxels(shadows[0].begin(), shadows[0].end());
+    //    Eigen::Matrix3Xd shadow_out = shadowVoxelsToPoints(voxels, voxel_grid_size);
+    //    return shadow_out;
     return shadowVoxelsToPoints(std::vector<Eigen::Vector3i>(shadows[0].begin(), shadows[0].end()), voxel_grid_size);
   }
 
@@ -149,9 +151,12 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
   double t0_intersection = omp_get_wtime();
   Vector3iSet bins_all = shadows[0];
 
-  for (int i = 1; i < shadows.size(); i++)
+  for (int i = 1; i < num_cams; i++)
   {
-	bins_all = intersection(bins_all, shadows[i]);
+    if (camera_set(i) >= 1) // check that there are points seen by this camera
+    {
+      bins_all = intersection(bins_all, shadows[i]);
+    }
   }
   if (MEASURE_TIME)
     std::cout << "intersection runtime: " << omp_get_wtime() - t0_intersection << "s\n";
@@ -177,11 +182,11 @@ Eigen::Matrix3Xd GraspSet::shadowVoxelsToPoints(const std::vector<Eigen::Vector3
   for (int i = 0; i < voxels.size(); i++)
   {
     shadow.col(i) = voxels[i].cast<double>() * voxel_grid_size + Eigen::Vector3d::Ones() * generator()
-      * voxel_grid_size * 0.3;
-//    shadow.col(i) = voxels[i].cast<double>() * voxel_grid_size;
-//    shadow.col(i)(0) += generator() * voxel_grid_size * 0.3;
-//    shadow.col(i)(1) += generator() * voxel_grid_size * 0.3;
-//    shadow.col(i)(2) += generator() * voxel_grid_size * 0.3;
+        * voxel_grid_size * 0.3;
+    //    shadow.col(i) = voxels[i].cast<double>() * voxel_grid_size;
+    //    shadow.col(i)(0) += generator() * voxel_grid_size * 0.3;
+    //    shadow.col(i)(1) += generator() * voxel_grid_size * 0.3;
+    //    shadow.col(i)(2) += generator() * voxel_grid_size * 0.3;
   }
   if (MEASURE_TIME)
     std::cout << "voxels-to-points runtime: " << omp_get_wtime() - t0_voxels << "s\n";
@@ -197,19 +202,19 @@ void GraspSet::calculateVoxelizedShadowVectorized4(const Eigen::Matrix3Xd& point
   const int n = points.cols() * num_shadow_points;
   const double voxel_grid_size_mult = 1.0 / voxel_grid_size;
   const double max = 1.0 / 32767.0;
-//  Eigen::Vector3d w;
+  //  Eigen::Vector3d w;
 
   for(int i = 0; i < n; i++)
   {
     const int pt_idx = i / num_shadow_points;
-//    const Eigen::Vector3d w = (points.col(pt_idx) + ((double) fastrand() * max) * shadow_vec) * voxel_grid_size_mult;
+    //    const Eigen::Vector3d w = (points.col(pt_idx) + ((double) fastrand() * max) * shadow_vec) * voxel_grid_size_mult;
     shadow_set.insert(((points.col(pt_idx) + ((double) fastrand() * max) * shadow_vec) * voxel_grid_size_mult).cast<int>());
   }
 
   if (MEASURE_TIME)
-	printf("Shadow (1 camera) calculation. Runtime: %.3f, #points: %d, num_shadow_points: %d, #shadow: %d, max #shadow: %d\n",
-	  omp_get_wtime() - t0_set, points.cols(), num_shadow_points, shadow_set.size(), n);
-//    std::cout << "Calculated shadow for 1 camera. Runtime: " << omp_get_wtime() - t0_set << ", #points: " << n << "\n";
+    printf("Shadow (1 camera) calculation. Runtime: %.3f, #points: %d, num_shadow_points: %d, #shadow: %d, max #shadow: %d\n",
+      omp_get_wtime() - t0_set, points.cols(), num_shadow_points, shadow_set.size(), n);
+  //    std::cout << "Calculated shadow for 1 camera. Runtime: " << omp_get_wtime() - t0_set << ", #points: " << n << "\n";
 }
 
 
@@ -254,7 +259,7 @@ Grasp GraspSet::createHypothesis(const Eigen::Vector3d& sample, const PointList&
 
 
 void GraspSet::labelHypothesis(const PointList& point_list, const FingerHand& finger_hand, Grasp& hand)
-  const
+const
 {
   Antipodal antipodal;
   int label = antipodal.evaluateGrasp(point_list, 0.003, finger_hand.getLateralAxis(), finger_hand.getForwardAxis(),

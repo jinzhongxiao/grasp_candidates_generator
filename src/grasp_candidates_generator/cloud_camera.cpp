@@ -2,7 +2,7 @@
 
 
 CloudCamera::CloudCamera()
-  : cloud_original_(new PointCloudRGB), cloud_processed_(new PointCloudRGB)
+: cloud_original_(new PointCloudRGB), cloud_processed_(new PointCloudRGB)
 {
   view_points_.resize(3,1);
   view_points_ << 0.0, 0.0, 0.0;
@@ -39,7 +39,7 @@ CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, const Eigen::Matrix
 
 
 CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points)
-  : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
+: cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
 {
   sample_indices_.resize(0);
   samples_.resize(3,0);
@@ -50,7 +50,7 @@ CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud
   // set the camera source matrix: (i,j) = 1 if point j is seen by camera i
   if (size_left_cloud == 0) // one camera
   {
-    camera_source_ = Eigen::MatrixXi::Zero(1, cloud->size());
+    camera_source_ = Eigen::MatrixXi::Ones(1, cloud->size());
   }
   else // two cameras
   {
@@ -69,14 +69,14 @@ CloudCamera::CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud
 
 
 CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points)
-  : cloud_processed_(cloud), cloud_original_(cloud), view_points_(view_points)
+: cloud_processed_(cloud), cloud_original_(cloud), view_points_(view_points)
 {
   sample_indices_.resize(0);
 
   // set the camera source matrix: (i,j) = 1 if point j is seen by camera i
   if (size_left_cloud == 0) // one camera
   {
-    camera_source_ = Eigen::MatrixXi::Zero(1, cloud->size());
+    camera_source_ = Eigen::MatrixXi::Ones(1, cloud->size());
   }
   else // two cameras
   {
@@ -89,7 +89,7 @@ CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, c
 
 
 CloudCamera::CloudCamera(const std::string& filename, const Eigen::Matrix3Xd& view_points)
-  : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
+: cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
 {
   sample_indices_.resize(0);
   cloud_processed_ = loadPointCloudFromFile(filename);
@@ -101,7 +101,7 @@ CloudCamera::CloudCamera(const std::string& filename, const Eigen::Matrix3Xd& vi
 
 CloudCamera::CloudCamera(const std::string& filename_left, const std::string& filename_right,
   const Eigen::Matrix3Xd& view_points)
-  : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
+: cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
 {
   sample_indices_.resize(0);
 
@@ -136,7 +136,7 @@ void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
     {
       const pcl::PointXYZRGBA& p = cloud_processed_->points[sample_indices_[i]];
       if (p.x > workspace[0] && p.x < workspace[1] && p.y > workspace[2] && p.y < workspace[3]
-          && p.z > workspace[4] && p.z < workspace[5])
+                                                                                            && p.z > workspace[4] && p.z < workspace[5])
       {
         indices_to_keep.push_back(i);
       }
@@ -154,8 +154,8 @@ void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
     for (int i = 0; i < samples_.cols(); i++)
     {
       if (samples_(0,i) > workspace[0] && samples_(0,i) < workspace[1]
-          && samples_(1,i) > workspace[2] && samples_(1,i) < workspace[3]
-          && samples_(2,i) > workspace[4] && samples_(2,i) < workspace[5])
+                                                                    && samples_(1,i) > workspace[2] && samples_(1,i) < workspace[3]
+                                                                                                                                 && samples_(2,i) > workspace[4] && samples_(2,i) < workspace[5])
       {
         indices_to_keep.push_back(i);
       }
@@ -171,7 +171,7 @@ void CloudCamera::filterWorkspace(const std::vector<double>& workspace)
   {
     const pcl::PointXYZRGBA& p = cloud_processed_->points[i];
     if (p.x > workspace[0] && p.x < workspace[1] && p.y > workspace[2] && p.y < workspace[3]
-        && p.z > workspace[4] && p.z < workspace[5])
+                                                                                          && p.z > workspace[4] && p.z < workspace[5])
     {
       indices.push_back(i);
     }
@@ -205,8 +205,8 @@ void CloudCamera::filterSamples(const std::vector<double>& workspace)
   for (int i = 0; i < samples_.size(); i++)
   {
     if (samples_(0,i) > workspace[0] && samples_(0,i) < workspace[1]
-        && samples_(1,i) > workspace[2] && samples_(1,i) < workspace[3]
-        && samples_(2,i) > workspace[4] && samples_(2,i) < workspace[5])
+                                                                  && samples_(1,i) > workspace[2] && samples_(1,i) < workspace[3]
+                                                                                                                               && samples_(2,i) > workspace[4] && samples_(2,i) < workspace[5])
     {
       indices.push_back(i);
     }
@@ -379,7 +379,7 @@ void CloudCamera::calculateNormals(int num_threads)
     std::cout << " using normal estimation OMP (" << num_threads << " threads) ...\n";
     pcl::NormalEstimationOMP<pcl::PointXYZRGBA, pcl::Normal> estimator(num_threads);
     pcl::search::KdTree<pcl::PointXYZRGBA>::Ptr tree_ptr(new pcl::search::KdTree<pcl::PointXYZRGBA>);
-    
+
     // // use samples as input and complete cloud as search surface
     // if (samples_.cols() > 0)
     // {
@@ -393,7 +393,7 @@ void CloudCamera::calculateNormals(int num_threads)
     // }
     // else
     // {
-      estimator.setInputCloud(cloud_processed_);
+    estimator.setInputCloud(cloud_processed_);
     // }
 
     // one camera view point
@@ -408,7 +408,7 @@ void CloudCamera::calculateNormals(int num_threads)
 
     estimator.setSearchMethod(tree_ptr);
     estimator.setRadiusSearch(0.03);
-//    estimator.setKSearch(30);
+    //    estimator.setKSearch(30);
     estimator.compute(*cloud_normals);
   }
 
@@ -416,48 +416,42 @@ void CloudCamera::calculateNormals(int num_threads)
   std::cout << " runtime (normals): " << omp_get_wtime() - t0 << "\n";
   double t1 = omp_get_wtime();
 
-  // if (samples_.cols() > 0)
-  // {
-	 //  Plot plotter;
-  //   plotter.plotNormals(cloud_processed_, cloud_samples, normals_);
-  // }
-
   // reverse direction of normals (if a normal does not point to at least one camera)
- if (view_points_.cols() > 1)
- {
-   std::cout << "Reversing normals that do not point to at least 1 camera ...\n";
-   std::cout << view_points_ << "\n";
-   std::cout << "camera_source: " << camera_source_.rows() << " x " << camera_source_.cols() << ", points: " << cloud_processed_->size() << ", normals: " << normals_.cols() << "\n";
-   int c = 0;
+//  if (view_points_.cols() > 1)
+//  {
+    std::cout << "Reversing normals that do not point to at least 1 camera ...\n";
+//    std::cout << view_points_ << "\n";
+//    std::cout << "camera_source: " << camera_source_.rows() << " x " << camera_source_.cols() << ", points: " << cloud_processed_->size() << ", normals: " << normals_.cols() << "\n";
+    int c = 0;
 
-   for (int i = 0; i < normals_.cols(); i++)
-   {
-     bool needs_reverse = true;
+    for (int i = 0; i < normals_.cols(); i++)
+    {
+      bool needs_reverse = true;
 
-     for (int j = 0; j < view_points_.cols(); j++)
-     {
-       if (camera_source_(j,i) == 1) // point is seen by this camera
-       {
-         Eigen::Vector3d cam_to_point = cloud_processed_->at(i).getVector3fMap().cast<double>() - view_points_.col(j);
+      for (int j = 0; j < view_points_.cols(); j++)
+      {
+        if (camera_source_(j,i) == 1) // point is seen by this camera
+        {
+          Eigen::Vector3d cam_to_point = cloud_processed_->at(i).getVector3fMap().cast<double>() - view_points_.col(j);
 
-         if (normals_.col(i).dot(cam_to_point) < 0) // normal points toward camera
-         {
-           needs_reverse = false;
-           break;
-         }
-       }
-     }
+          if (normals_.col(i).dot(cam_to_point) < 0) // normal points toward camera
+          {
+            needs_reverse = false;
+            break;
+          }
+        }
+      }
 
-     if (needs_reverse)
-     {
-       normals_.col(i) *= -1.0;
-       c++;
-     }
-   }
+      if (needs_reverse)
+      {
+        normals_.col(i) *= -1.0;
+        c++;
+      }
+    }
 
-   std::cout << " reversed " << c << " normals\n";
-   std::cout << " runtime (reverse normals): " << omp_get_wtime() - t1 << "\n";
- }
+    std::cout << " reversed " << c << " normals\n";
+    std::cout << " runtime (reverse normals): " << omp_get_wtime() - t1 << "\n";
+//  }
 }
 
 
