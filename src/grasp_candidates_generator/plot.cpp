@@ -196,6 +196,27 @@ void Plot::plotNormals(const CloudCamera& cloud_cam)
       colors[color_id][1], colors[color_id][2], cloud_name);
     viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, normal_colors[color_id][0],
       normal_colors[color_id][1], normal_colors[color_id][2], normals_name);
+
+    // draw camera position as a cube
+    const Eigen::Vector3d& cam_pos = cloud_cam.getViewPoints().col(i);
+    Eigen::Vector4f centroid_4d;
+    pcl::compute3DCentroid(*clouds[i], centroid_4d);
+    Eigen::Vector3d centroid;
+    centroid << centroid_4d(0), centroid_4d(1), centroid_4d(2);
+    Eigen::Vector3d cone_dir = centroid - cam_pos;
+    cone_dir.normalize();
+    pcl::ModelCoefficients coeffs;
+    coeffs.values.push_back(cam_pos(0));
+    coeffs.values.push_back(cam_pos(1));
+    coeffs.values.push_back(cam_pos(2));
+    coeffs.values.push_back(cone_dir(0));
+    coeffs.values.push_back(cone_dir(1));
+    coeffs.values.push_back(cone_dir(2));
+    coeffs.values.push_back(20.0);
+    std::string cone_name = "cam" + boost::lexical_cast<std::string>(i);
+    viewer->addCone(coeffs, cone_name, 0);
+    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, normal_colors[color_id][0],
+      normal_colors[color_id][1], normal_colors[color_id][2], cone_name);
   }
 
   runViewer(viewer);
