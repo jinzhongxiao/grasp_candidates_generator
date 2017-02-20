@@ -185,7 +185,7 @@ std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam, co
   PointList nn_points;
   GraspSet::HandGeometry hand_geom(params_.finger_width_, params_.hand_outer_diameter_, params_.hand_depth_,
     params_.hand_height_, params_.init_bite_);
-  GraspSet hand_set(hand_geom, angles, params_.rotation_axis_);
+//  GraspSet hand_set(hand_geom, angles, params_.rotation_axis_);
 
 #ifdef _OPENMP // parallelization using OpenMP
 #pragma omp parallel for private(nn_indices, nn_dists, nn_points) num_threads(params_.num_threads_)
@@ -199,6 +199,7 @@ std::vector<GraspSet> HandSearch::evaluateHands(const CloudCamera& cloud_cam, co
       nn_points = point_list.slice(nn_indices);
       nn_points.setPoints(nn_points.getPoints() - frames[i].getSample().replicate(1, nn_points.size()));
 
+      GraspSet hand_set(hand_geom, angles, params_.rotation_axis_);
       hand_set.evaluateHypotheses(nn_points, frames[i]);
 
       if (hand_set.getIsValid().any()) // at least one feasible hand
