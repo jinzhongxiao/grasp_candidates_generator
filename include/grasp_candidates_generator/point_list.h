@@ -41,24 +41,68 @@
 #include <grasp_candidates_generator/eigen_utils.h>
 
 
+/** PointList class
+ *
+ * This class represents a list of points by storing the points (3 x n matrix) and their surface normals
+ * (3 x n matrix). It also keeps information about which camera sees which point by storing the camera origins
+ * (3 x k matrix), and for each point, if it is seen or not from each camera (k x n matrix). If point i is seen from
+ * camera j, then <cam_source[i,j]> = 1. Otherwise, <cam_source[i,j]> = 0.
+ *
+ */
 class PointList
 {
   public:
 
+    /**
+     * \brief Default constructor.
+     */
     PointList() { }
 
+    /**
+     * \brief Construct a list of n points.
+     * \param points the points (3 x n)
+     * \param normals the surface normals associated with the points (3 x n)
+     * \param cam_source the camera source for each point (k x n)
+     * \param view_points the origins of the cameras that saw the points (3 x k)
+     */
     PointList(const Eigen::Matrix3Xd& points, const Eigen::Matrix3Xd& normals, const Eigen::MatrixXi& cam_source,
       const Eigen::Matrix3Xd& view_points)
       : points_(points), normals_(normals), cam_source_(cam_source), view_points_(view_points) { }
 
+    /**
+     * \brief Constructor.
+     * \param size number of points
+     * \param num_cams number of cameras that observed the points
+     */
     PointList(int size, int num_cams);
 
+    /**
+     * \brief Slice the point list given a set of indices.
+     * \param indices the indices to be sliced
+     * \return the point list containing the points given by the indices
+     */
     PointList slice(const std::vector<int>& indices) const;
 
+    /**
+     * \brief Transform a point list to a robot hand frame.
+     * \param centroid the origin of the frame
+     * \param rotation the orientation of the frame (3 x 3 rotation matrix)
+     * \return the point list transformed into the hand frame
+     */
     PointList transformToHandFrame(const Eigen::Vector3d& centroid, const Eigen::Matrix3d& rotation) const;
 
+    /**
+     * \brief Rotate a point list.
+     * \param rotation the 3 x 3 rotation matrix
+     * \return the rotated point list
+     */
     PointList rotatePointList(const Eigen::Matrix3d& rotation) const;
 
+    /**
+     * \brief Crop the points by the height of the robot hand.
+     * \param height the robot hand height
+     * \param dim the dimension of the points corresponding to the height
+     */
     PointList cropByHandHeight(double height, int dim = 2) const;
 
     const Eigen::MatrixXi& getCamSource() const
@@ -109,10 +153,10 @@ class PointList
 
   private:
 
-    Eigen::Matrix3Xd points_;
-    Eigen::Matrix3Xd normals_;
-    Eigen::MatrixXi cam_source_;
-    Eigen::Matrix3Xd view_points_;
+    Eigen::Matrix3Xd points_; ///< the points (3 x n matrix)
+    Eigen::Matrix3Xd normals_; ///< the surface normals of the points (3 x n matrix)
+    Eigen::MatrixXi cam_source_; ///< the camera source (k x n matrix of 1s and 0s)
+    Eigen::Matrix3Xd view_points_; ///< the camera origins (3 x k matrix)
 };
 
 

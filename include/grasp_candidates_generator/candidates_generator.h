@@ -64,30 +64,59 @@ class CandidatesGenerator
 {
   public:
 
+    /**
+     * Parameters for the candidates generator.
+     */
     struct Parameters
     {
-      bool plot_normals_;
-      bool plot_grasps_;
-      bool remove_statistical_outliers_;
-      bool voxelize_;
-      int num_samples_;
-      int num_threads_;
-      std::vector<double> workspace_;
+      bool plot_normals_; ///< if surface normals are plotted
+      bool plot_grasps_; ///< if grasps are plotted
+      bool remove_statistical_outliers_; ///< if statistical outliers are removed from the point cloud
+      bool voxelize_; ///< if the point cloud gets voxelized
+      int num_samples_; ///< the number of samples to be used in the search
+      int num_threads_; ///< the number of CPU threads to be used in the search
+      std::vector<double> workspace_; ///< the robot's workspace
     };
 
+    /**
+     * \brief Constructor.
+     * \param params the parameters to be used for the candidate generation
+     * \param hand_search_params the parameters to be used for the hand search
+     */
     CandidatesGenerator(const Parameters& params, const HandSearch::Parameters& hand_search_params);
 
+    /**
+     * Destructor.
+     */
     ~CandidatesGenerator()
     {
       delete hand_search_;
     }
 
+    /**
+     * \brief Preprocess the point cloud.
+     * \param cloud_cam the point cloud
+     */
     void preprocessPointCloud(CloudCamera& cloud_cam);
 
+    /**
+     * \brief Generate grasp candidates given a point cloud.
+     * \param cloud_cam the point cloud
+     * \param use_samples if samples are used
+     */
     std::vector<Grasp> generateGraspCandidates(const CloudCamera& cloud_cam, bool use_samples = false);
 
+    /**
+     * \brief Generate grasp candidate sets given a point cloud.
+     * \param cloud_cam the point cloud
+     * \param use_samples if samples are used
+     */
     std::vector<GraspSet> generateGraspCandidateSets(const CloudCamera& cloud_cam, bool use_samples = false);
 
+    /**
+     * \brief Set the number of samples.
+     * \param num_samples the number of samples
+     */
     void setNumSamples(int num_samples)
     {
       params_.num_samples_ = num_samples;
@@ -96,10 +125,10 @@ class CandidatesGenerator
 
   private:
 
-    HandSearch* hand_search_;
-    Plot plotter_;
+    HandSearch* hand_search_; ///< pointer to an object for the hand search
+    Plot plotter_; ///< pointer to an object for plotting
 
-    Parameters params_;
+    Parameters params_; ///< parameters for the grasp candidates generation
 };
 
 #endif /* GRASP_CANDIDATES_GENERATOR_H */

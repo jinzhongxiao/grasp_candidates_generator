@@ -82,8 +82,6 @@ public:
     */
     bool operator ()(const Eigen::Vector3i& a, const Eigen::Vector3i& b)
     {
-//      return a(0) < b(0) && a(1) < b(1) && a(2) < b(2);
-
       for (int i = 0; i < a.size(); i++)
       {
         if (a(i) != b(i))
@@ -96,13 +94,16 @@ public:
     }
   };
 
+  /**
+   * \brief Comparator for checking uniqueness of two 4D-vectors.
+  */
   struct UniqueVectorFirstThreeElementsComparator
   {
     /**
-     * \brief Compares two 3D-vectors for uniqueness (ignores the last element).
-     * \param a the first 3D-vector
-     * \param b the second 3D-vector
-     * \return true if they differ in at least one element, false if all elements are equal
+     * \brief Compares two 4D-vectors for uniqueness (ignores the last element).
+     * \param a the first 4D-vector
+     * \param b the second 4D-vector
+     * \return true if they differ in at least one of the first three elements, false otherwise
     */
     bool operator ()(const Eigen::Vector4i& a, const Eigen::Vector4i& b)
     {
@@ -118,20 +119,58 @@ public:
     }
   };
 
+  /**
+   * \brief Constructor.
+   */
   CloudCamera();
 
+  /**
+   * \brief Constructor.
+   * \param cloud the point cloud (of size n)
+   * \param camera_source the camera source for each point in the cloud (size: k x n)
+   * \param view_points the origins of the cameras (size: 3 x k)
+   */
   CloudCamera(const PointCloudRGB::Ptr& cloud, const Eigen::MatrixXi& camera_source,
     const Eigen::Matrix3Xd& view_points);
 
+  /**
+   * \brief Constructor.
+   * \param cloud the point cloud with surface normals (of size n)
+   * \param camera_source the camera source for each point in the cloud (size: k x n)
+   * \param view_points the origins of the cameras (size: 3 x k)
+   */
   CloudCamera(const PointCloudNormal::Ptr& cloud, const Eigen::MatrixXi& camera_source,
     const Eigen::Matrix3Xd& view_points);
 
-  CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);
-
+  /**
+   * \brief Constructor for a two camera setup (left and right camera).
+   * \param cloud the point cloud (of size n)
+   * \param size_left_cloud the size of the point cloud from the left camera
+   * \param view_points the origins of the cameras (size: 3 x k)
+   */
   CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);
 
+  /**
+   * \brief Constructor for a two cameras setup (left and right camera).
+   * \param cloud the point cloud with surface normals (of size n)
+   * \param size_left_cloud the size of the point cloud from the left camera
+   * \param view_points the origins of the cameras (size: 3 x k)
+   */
+  CloudCamera(const PointCloudNormal::Ptr& cloud, int size_left_cloud, const Eigen::Matrix3Xd& view_points);
+
+  /**
+   * \brief Constructor for point cloud files (*.pcd).
+   * \param filename the location of the point cloud file
+   * \param view_points the origins of the cameras (size: 3 x k)
+   */
   CloudCamera(const std::string& filename, const Eigen::Matrix3Xd& view_points);
 
+  /**
+   * \brief Constructor for point cloud files (*.pcd) from a two cameras setup.
+   * \param filename_left the location of the point cloud file from the first camera
+   * \param filename_right the location of the point cloud file from the second camera
+   * \param view_points the origins of the cameras (size: 3 x k)
+   */
   CloudCamera(const std::string& filename_left, const std::string& filename_right,
     const Eigen::Matrix3Xd& view_points);
 
@@ -141,6 +180,10 @@ public:
   */
   void filterWorkspace(const std::vector<double>& workspace);
 
+  /**
+   * \brief Filter out samples that lie outside the workspace dimensions.
+   * \param[in] workspace a 6-D vector containing the workspace limits: [minX, maxX, minY, maxY, minZ, maxZ]
+  */
   void filterSamples(const std::vector<double>& workspace);
 
   /**
@@ -155,61 +198,122 @@ public:
   */
   void subsampleUniformly(int num_samples);
 
+  /**
+   * \brief Subsample the samples according to the uniform distribution.
+   * \param[in] num_samples the number of samples to draw from the samples
+  */
   void subsampleSamples(int num_samples);
 
+  /**
+   * \brief Calculate surface normals for the point cloud.
+   * \param[in] num_threads the number of CPU threads to be used in the calculation
+  */
   void calculateNormals(int num_threads);
 
+  /**
+   * \brief Set surface normals from a file.
+   * \param[in] filename the location of the file
+  */
   void setNormalsFromFile(const std::string& filename);
 
+  /**
+   * \brief Write surface normals to a file.
+   * \param filename the location of the file
+   * \param normals the surface normals
+  */
   void writeNormalsToFile(const std::string& filename, const Eigen::Matrix3Xd& normals);
 
+  /**
+   * \brief Return the camera source matrix.
+   * \return the camera source matrix (k x n)
+  */
   const Eigen::MatrixXi& getCameraSource() const
   {
     return camera_source_;
   }
 
+  /**
+   * \brief Return the preprocessed point cloud.
+   * \return the point cloud
+  */
   const PointCloudRGB::Ptr& getCloudProcessed() const
   {
     return cloud_processed_;
   }
 
+  /**
+   * \brief Return the original point cloud.
+   * \return the point cloud
+  */
   const PointCloudRGB::Ptr& getCloudOriginal() const
   {
     return cloud_original_;
   }
 
+  /**
+   * \brief Return the original point cloud.
+   * \return the point cloud
+  */
   const std::vector<int>& getSampleIndices() const
   {
     return sample_indices_;
   }
 
+  /**
+   * \brief Return the surface normals.
+   * \return the surface normals (size: 3 x n)
+  */
   const Eigen::Matrix3Xd& getNormals() const
   {
     return normals_;
   }
 
+  /**
+   * \brief Return the samples.
+   * \return the samples (size: 3 x n)
+  */
   const Eigen::Matrix3Xd& getSamples() const
   {
     return samples_;
   }
 
+  /**
+   * \brief Return the sample indices.
+   * \return the sample indices (size: n)
+  */
   void setSampleIndices(const std::vector<int>& sampleIndices)
   {
     sample_indices_ = sampleIndices;
   }
 
+  /**
+   * \brief Set the samples.
+   * \return the samples (size: 3 x n)
+  */
   void setSamples(const Eigen::Matrix3Xd& samples);
 
+  /**
+   * \brief Set the surface normals.
+   * \return the surface normals (size: 3 x n)
+  */
   void setNormals (const Eigen::Matrix3Xd& normals)
   {
     normals_ = normals;
   }
 
+  /**
+   * \brief Get the view points of the cameras.
+   * \return the origins of the cameras (size: 3 x k)
+  */
   const Eigen::Matrix3Xd& getViewPoints() const
   {
     return view_points_;
   }
 
+  /**
+   * \brief Set the camera view points.
+   * \return the origins of the cameras (size: 3 x k)
+  */
   void setViewPoints(const Eigen::Matrix3Xd& view_points)
   {
     view_points_ = view_points;
@@ -218,6 +322,11 @@ public:
 
 private:
 
+  /**
+   * \brief Load a point cloud from a file.
+   * \param filename the location of the file
+   * \return the point cloud
+  */
   PointCloudRGB::Ptr loadPointCloudFromFile(const std::string& filename) const;
 
   PointCloudRGB::Ptr cloud_processed_; ///< the (processed) point cloud

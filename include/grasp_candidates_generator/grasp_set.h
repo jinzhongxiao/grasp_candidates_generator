@@ -91,6 +91,16 @@ typedef boost::unordered_set<Eigen::Vector3i, boost::hash<Eigen::Vector3i>, Vect
   std::allocator<Eigen::Vector3i> > Vector3iSet;
 
 
+/** GraspSet class
+ *
+ * \brief Calculate grasp sets.
+ *
+ * This class calculates grasp sets. A grasp set is a set of grasps that are all calculated for the same point
+ * neighborhood. Each grasp in the set has a different orientation. The grasps are calculated by a local search over
+ * discretized orientations and positions. This discretization is done by fixing two degrees of orientation and
+ * rotating the robot hand about a fixed axis.
+ *
+*/
 class GraspSet
 {
   public:
@@ -108,8 +118,6 @@ class GraspSet
        */
       bool operator ()(const Eigen::Vector3i& a, const Eigen::Vector3i& b)
       {
-        //      return a(0) < b(0) && a(1) < b(1) && a(2) < b(2);
-
         for (int i = 0; i < a.size(); i++)
         {
           if (a(i) != b(i))
@@ -122,7 +130,7 @@ class GraspSet
       }
     };
 
-    /** robot hand geometry */
+    /** Robot hand geometry */
     struct HandGeometry
     {
         double finger_width_; ///< the width of the robot hand fingers
@@ -139,44 +147,92 @@ class GraspSet
           height_(hand_height), init_bite_(init_bite) {  }
     };
 
+    /**
+     * Constructor.
+     */
     GraspSet();
 
+    /**
+     * \brief Constructor.
+     * \param hand_geometry the hand geometry parameters
+     * \param angles the orientations to be considered
+     * \param rotation_axis the axis about which the orientations are considered
+     */
     GraspSet(const HandGeometry& hand_geometry, const Eigen::VectorXd& angles, int rotation_axis);
 
+    /**
+     * \brief Calculate a grasp set given a local reference frame.
+     * \param point_list the point neighborhood
+     * \param local_frame the local reference frame
+     */
     void evaluateHypotheses(const PointList& point_list, const LocalFrame& local_frame);
 
+    /**
+     * \brief Calculate the set of shadow points for a grasp set.
+     * \param point_list the point neighborhood
+     * \param shadow_length the length of the shadow
+     */
     Eigen::Matrix3Xd calculateShadow4(const PointList& point_list, double shadow_length) const;
 
+    /**
+     * \brief Return the grasps contained in this grasp set.
+     * \return the grasps contained in this grasp set
+     */
     const std::vector<Grasp>& getHypotheses() const
-      {
+    {
       return hands_;
-      }
+    }
 
+    /**
+     * \brief Set the grasps for this grasp set.
+     * \param hands the grasps
+     */
     void setHands(const std::vector<Grasp>& hands)
     {
       hands_ = hands;
     }
 
+    /**
+     * \brief Return the center of the point neighborhood.
+     * \return the center of the point neighborhood
+     */
     const Eigen::Vector3d& getSample() const
     {
       return sample_;
     }
 
+    /**
+     * \brief Set the center of the point neighborhood.
+     * \param sample the center of the point neighborhood
+     */
     void setSample(const Eigen::Vector3d& sample)
     {
       sample_ = sample;
     }
 
+    /**
+     * \brief Return a list of booleans that indicate for each grasp if it is valid or not.
+     * \return the list of booleans
+     */
     const Eigen::Array<bool, 1, Eigen::Dynamic>& getIsValid() const
-      {
+    {
       return is_valid_;
-      }
+    }
 
+    /**
+     * \brief Set, for each grasp, if it is valid or not.
+     * \param isValid the list of booleans which indicate if each grasp is valid or not
+     */
     void setIsValid(const Eigen::Array<bool, 1, Eigen::Dynamic>& isValid)
     {
       is_valid_ = isValid;
     }
 
+    /**
+     * \brief Set a single grasp to be valid or not.
+     * \param idx the index of the grasp
+     * \param val true if the grasp is valid, false if it is not
+     */
     void setIsValidWithIndex(int idx, bool val)
     {
       is_valid_[idx] = val;
@@ -185,30 +241,75 @@ class GraspSet
 
   private:
 
+    /**
+     * \brief Calculate a single shadow.
+     * \param[in] points the list of points for which the shadow is calculated
+     * \param[in] shadow_vec the vector that describes the direction of the shadow relative to the camera origin
+     * \param[in] num_shadow_points the number of shadow points to be calculated
+     * \param[in] voxel_grid_size the size of the voxel grid
+     * \param[out] shadow_set the set of shadow points
+     */
     void calculateVoxelizedShadowVectorized4(const Eigen::Matrix3Xd& points,
       const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size, Vector3iSet& shadow_set) const;
 
+    /**
+     * \brief Round a floating point vector to the nearest, smaller integers.
+     * \param a the vector to be rounded
+     * \return the vector containing integers
+     */
     Eigen::VectorXi floorVector(const Eigen::VectorXd& a) const;
 
+    /**
+     * \brief Create a grasp candidate.
+     * \param sample the center of the point neighborhood
+     * \param point_list the point neighborhood
+     * \param indices_learning the indices of the points used for learning
+     * \param hand_frame the orientation of the grasp as a rotation matrix
+     * \param finger_hand the FingerHand object that describes valid finger placements
+     * \return the grasp
+     */
     Grasp createHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
       const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const;
 
+    /**
+     * \brief Label a grasp candidate as a viable grasp or not.
+     * \param point_list the point neighborhood associated with the grasp
+     * \param finger_hand the FingerHand object that describes valid finger placements
+     * \param hand the grasp
+     */
     void labelHypothesis(const PointList& point_list, const FingerHand& finger_hand, Grasp& hand) const;
 
+    /**
+     * \brief Convert shadow voxels to shadow points.
+     * \param voxels the shadow voxels
+     * \param voxel_grid_size the size of the voxel grid
+     * \return the shadow points
+     */
     Eigen::Matrix3Xd shadowVoxelsToPoints(const std::vector<Eigen::Vector3i>& voxels, double voxel_grid_size) const;
 
+    /**
+     * \brief Calculate the intersection of two shadows.
+     * \param set1 the first shadow
+     * \param set2 the second shadow
+     * \return the intersection
+     */
     Vector3iSet intersection(const Vector3iSet& set1, const Vector3iSet& set2) const;
 
     /**
+     * \brief Generate a random integer.
      * source: http://software.intel.com/en-us/articles/fast-random-number-generator-on-the-intel-pentiumr-4-processor/
      */
     inline int fastrand() const;
 
+    /**
+     * \brief Round a floating point vector to the nearest, smaller integers in-place.
+     * \param[out] the vector to be rounded
+     */
     inline void floorVector(Eigen::Vector3d& a) const;
 
-    Eigen::Vector3d sample_;
-    std::vector<Grasp> hands_;
-    Eigen::Array<bool, 1, Eigen::Dynamic> is_valid_;
+    Eigen::Vector3d sample_; ///< the center of the point neighborhood
+    std::vector<Grasp> hands_; ///< the grasps contained in this grasp set
+    Eigen::Array<bool, 1, Eigen::Dynamic> is_valid_; ///< indicates for each grasp if it is valid or not
     Eigen::VectorXd angles_; ///< the hand orientations to consider in the local search
 
     HandGeometry hand_geometry_; ///< the robot hand geometry
@@ -221,7 +322,7 @@ class GraspSet
     static const int ROTATION_AXIS_BINORMAL; ///< binormal axis of local reference frame
     static const int ROTATION_AXIS_CURVATURE_AXIS; ///< curvature axis of local reference frame
 
-    static const bool MEASURE_TIME;
+    static const bool MEASURE_TIME; ///< if runtime is measured
 };
 
 #endif /* GRASP_SET_H_ */

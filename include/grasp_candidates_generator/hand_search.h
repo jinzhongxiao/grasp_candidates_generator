@@ -94,14 +94,36 @@ public:
     double init_bite_; ///< the minimum object height
   };
 
+  /**
+   * \brief Constructor.
+   * \param params Parameters for the hand search
+   */
   HandSearch(Parameters params);
 
-  std::vector<GraspSet> searchHands(const CloudCamera& cloud_cam, int antipodal_mode, bool use_samples,
-    bool forces_PSD = false, bool plots_normals = false, bool plots_samples = false) const;
+  /**
+   * \brief Search robot hand configurations.
+   * \param cloud_cam the point cloud
+   * \param use_samples if samples are used
+   * \param plots_normals if surface normals are visualized
+   * \param plots_samples if samples are visualized
+   * \return list of grasp candidate sets
+   */
+  std::vector<GraspSet> searchHands(const CloudCamera& cloud_cam, bool use_samples, bool plots_normals = false,
+    bool plots_samples = false) const;
 
-  std::vector<Grasp> reevaluateHypotheses(const CloudCamera& cloud_cam,
-    const std::vector<Grasp>& grasps, bool plot_samples = false) const;
+  /**
+   * \brief Reevaluate a list of grasp candidates.
+   * \param cloud_cam the point cloud
+   * \param grasps the list of grasp candidates
+   * \param plots_samples if samples are visualized
+   */
+  std::vector<Grasp> reevaluateHypotheses(const CloudCamera& cloud_cam, const std::vector<Grasp>& grasps,
+    bool plot_samples = false) const;
 
+  /**
+   * \brief Set the parameters for the hand search.
+   * \param params the parameters
+   */
   void setParameters(const Parameters& params)
   {
     params_ = params;
@@ -110,14 +132,39 @@ public:
 
 private:
 
+  /**
+   * \brief Search robot hand configurations given a list of local reference frames.
+   * \param cloud_cam the point cloud
+   * \param frames the list of local reference frames
+   * \param kdtree the KDTree object used for fast neighborhood search
+   * \return the list of robot hand configurations
+   */
   std::vector<GraspSet> evaluateHands(const CloudCamera& cloud_cam, const std::vector<LocalFrame>& frames,
     const pcl::KdTreeFLANN<pcl::PointXYZRGBA>& kdtree) const;
 
+  /**
+   * \brief Reevaluate a grasp candidate.
+   * \param point_list the point neighborhood associated with the grasp
+   * \param hand the grasp
+   * \param finger_hand the FingerHand object that describes a valid finger placement
+   * \param point_list_cropped the point neigborhood transformed into the hand frame
+   */
   bool reevaluateHypothesis(const PointList& point_list, const Grasp& hand, FingerHand& finger_hand,
     PointList& point_list_cropped) const;
 
+  /**
+   * \brief Calculate the label for a grasp candidate.
+   * \param point_list the point neighborhood associated with the grasp
+   * \param finger_hand the FingerHand object that describes a valid finger placement
+   * \return the label
+   */
   int labelHypothesis(const PointList& point_list, FingerHand& finger_hand) const;
 
+  /**
+   * \brief Convert an Eigen::Vector3d object to a pcl::PointXYZRGBA.
+   * \param v the Eigen vector
+   * \reutrn the pcl point
+   */
   pcl::PointXYZRGBA eigenVectorToPcl(const Eigen::Vector3d& v) const;
 
   Parameters params_; ///< parameters for the hand search

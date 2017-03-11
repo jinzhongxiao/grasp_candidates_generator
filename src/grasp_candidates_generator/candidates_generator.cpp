@@ -160,7 +160,7 @@ std::vector<GraspSet> CandidatesGenerator::generateGraspCandidateSets(const Clou
   bool use_samples)
 {
   // Find sets of grasp candidates.
-  std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
+  std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam, use_samples);
 
   if (params_.plot_grasps_)
   {

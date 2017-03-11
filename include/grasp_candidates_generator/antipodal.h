@@ -54,9 +54,24 @@ class Antipodal
 {
 public:
 
+  /**
+   * \brief Check if a grasp is antipodal.
+   * \param point_list the list of points associated with the grasp
+   * \param extremal_threshold
+   * \param lateral_axis the closing direction of the robot hand
+   * \param forward_axis the forward direction of the robot hand
+   * \param vertical_axis the vertical direction of the robot hand
+   * \return 0 if it's not antipodal, 1 if one finger is antipodal, 2 if the grasp is antipodal
+   */
   int evaluateGrasp(const PointList& point_list, double extremal_thresh, int lateral_axis = 0, int forward_axis = 1,
     int vertical_axis = 2) const;
 
+  /**
+   * \brief Check if a grasp is antipodal.
+   * \param normals the set of surface normals associated with the grasp
+   * \param thresh_half the threshold to consider the grasp half-antipodal
+   * \param thresh_full the threshold to conisder the grasp full-antipodal
+   */
   int evaluateGrasp(const Eigen::Matrix3Xd& normals, double thresh_half, double thresh_full) const;
 
   static const int NO_GRASP; // normals point not toward any finger

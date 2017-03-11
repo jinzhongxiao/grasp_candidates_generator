@@ -16,8 +16,8 @@ HandSearch::HandSearch(Parameters params) : params_(params), plots_samples_(fals
 }
 
 
-std::vector<GraspSet> HandSearch::searchHands(const CloudCamera& cloud_cam, int antipodal_mode,
-  bool use_samples, bool forces_PSD, bool plots_normals, bool plots_samples) const
+std::vector<GraspSet> HandSearch::searchHands(const CloudCamera& cloud_cam, bool use_samples, bool plots_normals,
+  bool plots_samples) const
 {
   if (params_.rotation_axis_ < 0 || params_.rotation_axis_ > 2)
   {

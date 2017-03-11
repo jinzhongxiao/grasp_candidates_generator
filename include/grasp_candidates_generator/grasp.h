@@ -97,13 +97,35 @@ public:
    */
   Grasp();
 
+  /**
+   * \brief Constructor.
+   * \param sample the center of the point neighborhood associated with the grasp
+   * \param frame the orientation of the grasp as a rotation matrix
+   * \param finger_hand the FingerHand object describing a feasible finger placement
+   * \param width the opening width of the robot hand
+   */
   Grasp(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand,
     double width);
 
+  /**
+   * \brief Constructor.
+   * \param sample the center of the point neighborhood associated with the grasp
+   * \param frame the orientation of the grasp as a rotation matrix
+   * \param finger_hand the FingerHand object describing a feasible finger placement
+   */
   Grasp(const Eigen::Vector3d& sample, const Eigen::Matrix3d& frame, const FingerHand& finger_hand);
 
+  /**
+   * \brief Set properties of the grasp.
+   * \param finger_hand the FingerHand object describing a feasible finger placement
+   */
   void construct(const FingerHand& finger_hand);
 
+  /**
+   * \brief Write a list of grasps to a file.
+   * \param filename location of the file
+   * \param hands the list of grasps
+   */
   void writeHandsToFile(const std::string& filename, const std::vector<Grasp>& hands) const;
 
   /**
@@ -219,41 +241,73 @@ public:
     return pose_.top_;
   }
 
+  /**
+   * \brief Set the bottom position of the grasp.
+   * \param grasp_bottom the bottom position
+   */
   void setGraspBottom(const Eigen::Vector3d& grasp_bottom)
   {
     pose_.bottom_ = grasp_bottom;
   }
 
+  /**
+   * \brief Set the bottom position relative to the object.
+   * \param grasp_surface the bottom position relative to the object
+   */
   void setGraspSurface(const Eigen::Vector3d& grasp_surface)
   {
     pose_.surface_ = grasp_surface;
   }
 
+  /**
+   * \brief Set the top position of the grasp.
+   * \param grasp_top the top position
+   */
   void setGraspTop(const Eigen::Vector3d& grasp_top)
   {
     pose_.top_ = grasp_top;
   }
 
+  /**
+   * \brief Get the score of the grasp.
+   * \return the score
+   */
   double getScore() const
   {
     return label_.score_;
   }
 
+  /**
+   * \brief Set the score of the grasp.
+   * \param score the score
+   */
   void setScore(double score)
   {
     label_.score_ = score;
   }
 
+  /**
+   * \brief Return the center of the point neighborhood associated with the grasp.
+   * \return the center
+   */
   const Eigen::Vector3d& getSample() const
   {
     return sample_;
   }
 
+  /**
+   * \brief Return the grasp orientation.
+   * \return the orientation of the grasp as a rotation matrix
+   */
   const Eigen::Matrix3d& getFrame() const
   {
     return pose_.frame_;
   }
 
+  /**
+   * \brief Return the grasp position.
+   * \return the position of the grasp
+   */
   const Eigen::Vector3d getPosition() const
   {
     return pose_.bottom_;
@@ -284,6 +338,10 @@ public:
     return config_1d_.top_;
   }
 
+  /**
+   * \brief Return the index of the finger placement.
+   * \return the index of the finger placement
+   */
   int getFingerPlacementIndex () const
   {
     return finger_placement_index_;
@@ -292,8 +350,17 @@ public:
 
 private:
 
+  /**
+   * \brief Calculate grasp positions (bottom, top, surface).
+   * \param finger_hand the FingerHand object describing a feasible finger placement
+   */
   void calculateGraspPositions(const FingerHand& finger_hand);
 
+  /**
+   * \brief Convert an Eigen vector to a string.
+   * \param v the vector
+   * \return the string
+   */
   std::string vectorToString(const Eigen::VectorXd& v) const;
 
 protected:
@@ -304,7 +371,7 @@ protected:
   GraspPose pose_; ///< the grasp pose
   Label label_; ///< labeling information
   int finger_placement_index_; ///< index of the finger placement that resulted in this grasp
-  Configuration1D config_1d_; ///< position of fingers and base relative to local hand frame
+  Configuration1D config_1d_; ///< position of fingers and hand base relative to local hand frame
 };
 
 #endif /* GRASP_H_ */

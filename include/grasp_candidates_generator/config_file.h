@@ -50,9 +50,6 @@ class ConfigFile
 
     bool keyExists(const std::string &key) const;
 
-    // template <typename ValueType>
-    // ValueType getValueOfKey(const std::string &key, ValueType const &defaultValue = ValueType()) const;
-    
     template <typename ValueType>
     ValueType getValueOfKey(const std::string &key, ValueType const &defaultValue) const
     {
