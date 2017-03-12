@@ -16,7 +16,7 @@ HandSearch::HandSearch(Parameters params) : params_(params), plots_samples_(fals
 }
 
 
-std::vector<GraspSet> HandSearch::searchHands(const CloudCamera& cloud_cam, bool use_samples, bool plots_normals,
+std::vector<GraspSet> HandSearch::searchHands(const CloudCamera& cloud_cam, bool plots_normals,
   bool plots_samples) const
 {
   if (params_.rotation_axis_ < 0 || params_.rotation_axis_ > 2)
@@ -58,7 +58,6 @@ std::vector<GraspSet> HandSearch::searchHands(const CloudCamera& cloud_cam, bool
   std::cout << "Estimating local reference frames ...\n";
   std::vector<LocalFrame> frames;
   FrameEstimator frame_estimator(params_.num_threads_);
-  // if (use_samples)
   if (cloud_cam.getSamples().cols() > 0)
     frames = frame_estimator.calculateLocalFrames(cloud_cam, cloud_cam.getSamples(), params_.nn_radius_frames_, kdtree);
   else if (cloud_cam.getSampleIndices().size() > 0)

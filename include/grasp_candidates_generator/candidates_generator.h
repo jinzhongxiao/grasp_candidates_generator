@@ -102,16 +102,14 @@ class CandidatesGenerator
     /**
      * \brief Generate grasp candidates given a point cloud.
      * \param cloud_cam the point cloud
-     * \param use_samples if samples are used
      */
-    std::vector<Grasp> generateGraspCandidates(const CloudCamera& cloud_cam, bool use_samples = false);
+    std::vector<Grasp> generateGraspCandidates(const CloudCamera& cloud_cam);
 
     /**
      * \brief Generate grasp candidate sets given a point cloud.
      * \param cloud_cam the point cloud
-     * \param use_samples if samples are used
      */
-    std::vector<GraspSet> generateGraspCandidateSets(const CloudCamera& cloud_cam, bool use_samples = false);
+    std::vector<GraspSet> generateGraspCandidateSets(const CloudCamera& cloud_cam);
 
     /**
      * \brief Set the number of samples.

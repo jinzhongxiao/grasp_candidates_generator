@@ -103,12 +103,11 @@ public:
   /**
    * \brief Search robot hand configurations.
    * \param cloud_cam the point cloud
-   * \param use_samples if samples are used
    * \param plots_normals if surface normals are visualized
    * \param plots_samples if samples are visualized
    * \return list of grasp candidate sets
    */
-  std::vector<GraspSet> searchHands(const CloudCamera& cloud_cam, bool use_samples, bool plots_normals = false,
+  std::vector<GraspSet> searchHands(const CloudCamera& cloud_cam, bool plots_normals = false,
     bool plots_samples = false) const;
 
   /**

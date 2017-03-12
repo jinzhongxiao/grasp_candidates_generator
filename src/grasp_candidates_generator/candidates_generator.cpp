@@ -124,11 +124,10 @@ void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 }
 
 
-std::vector<Grasp> CandidatesGenerator::generateGraspCandidates(const CloudCamera& cloud_cam,
-  bool use_samples)
+std::vector<Grasp> CandidatesGenerator::generateGraspCandidates(const CloudCamera& cloud_cam)
 {
   // Find sets of grasp candidates.
-  std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam, 0, use_samples);
+  std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam);
   std::cout << "Generated " << hand_set_list.size() << " grasp candidate sets.\n";
 
   // Extract the grasp candidates.
@@ -156,11 +155,10 @@ std::vector<Grasp> CandidatesGenerator::generateGraspCandidates(const CloudCamer
 }
 
 
-std::vector<GraspSet> CandidatesGenerator::generateGraspCandidateSets(const CloudCamera& cloud_cam,
-  bool use_samples)
+std::vector<GraspSet> CandidatesGenerator::generateGraspCandidateSets(const CloudCamera& cloud_cam)
 {
   // Find sets of grasp candidates.
-  std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam, use_samples);
+  std::vector<GraspSet> hand_set_list = hand_search_->searchHands(cloud_cam);
 
   if (params_.plot_grasps_)
   {
