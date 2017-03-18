@@ -72,6 +72,8 @@ CloudCamera::CloudCamera(const PointCloudRGB::Ptr& cloud, int size_left_cloud, c
 : cloud_processed_(cloud), cloud_original_(cloud), view_points_(view_points)
 {
   sample_indices_.resize(0);
+  samples_.resize(3,0);
+  normals_.resize(3,0);
 
   // set the camera source matrix: (i,j) = 1 if point j is seen by camera i
   if (size_left_cloud == 0) // one camera
@@ -92,6 +94,8 @@ CloudCamera::CloudCamera(const std::string& filename, const Eigen::Matrix3Xd& vi
 : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
 {
   sample_indices_.resize(0);
+  samples_.resize(3,0);
+  normals_.resize(3,0);
   cloud_processed_ = loadPointCloudFromFile(filename);
   cloud_original_ = cloud_processed_;
   camera_source_ = Eigen::MatrixXi::Ones(1, cloud_processed_->size());
@@ -104,6 +108,8 @@ CloudCamera::CloudCamera(const std::string& filename_left, const std::string& fi
 : cloud_processed_(new PointCloudRGB), cloud_original_(new PointCloudRGB), view_points_(view_points)
 {
   sample_indices_.resize(0);
+  samples_.resize(3,0);
+  normals_.resize(3,0);
 
   // load and combine the two point clouds
   std::cout << "Loading point clouds ...\n";
@@ -364,9 +370,7 @@ void CloudCamera::calculateNormals(int num_threads)
     std::cout << view_points_.cols() << "\n";
     std::cout << view_points_.col(0).transpose() << "\n";
     pcl::IntegralImageNormalEstimation<pcl::PointXYZRGBA, pcl::Normal> ne;
-    std::cout << "A " << cloud_processed_->points.size() << ", " << cloud_processed_->isOrganized() << "\n";
     ne.setInputCloud(cloud_processed_);
-    std::cout << "B\n";
     ne.setViewPoint(view_points_(0,0), view_points_(1,0), view_points_(2,0));
     ne.setNormalEstimationMethod(ne.COVARIANCE_MATRIX);
     ne.setNormalSmoothingSize(20.0f);
@@ -397,10 +401,16 @@ void CloudCamera::calculateNormals(int num_threads)
 
   normals_ = cloud_normals->getMatrixXfMap().cast<double>();
   std::cout << " runtime (normals): " << omp_get_wtime() - t0 << "\n";
-  double t1 = omp_get_wtime();
 
   // reverse direction of normals (if a normal does not point to at least one camera)
-  std::cout << "Reversing normals that do not point to at least 1 camera ...\n";
+  std::cout << "Reversing normals that do not point to at least one camera ...\n";
+  reverseNormals();
+}
+
+
+void CloudCamera::reverseNormals()
+{
+  double t1 = omp_get_wtime();
   int c = 0;
 
   for (int i = 0; i < normals_.cols(); i++)

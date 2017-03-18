@@ -83,8 +83,8 @@ std::vector<GraspSet> HandSearch::searchHands(const CloudCamera& cloud_cam, bool
 }
 
 
-std::vector<Grasp> HandSearch::reevaluateHypotheses(const CloudCamera& cloud_cam,
-  const std::vector<Grasp>& grasps, bool plot_samples) const
+std::vector<Grasp> HandSearch::reevaluateHypotheses(const CloudCamera& cloud_cam, const std::vector<Grasp>& grasps,
+  bool plot_samples) const
 {
   // create KdTree for neighborhood search
   const Eigen::MatrixXi& camera_source = cloud_cam.getCameraSource();
@@ -93,14 +93,15 @@ std::vector<Grasp> HandSearch::reevaluateHypotheses(const CloudCamera& cloud_cam
   pcl::KdTreeFLANN<pcl::PointXYZRGBA> kdtree;
   kdtree.setInputCloud(cloud);
 
-  Plot plotter;
-  Eigen::Matrix3Xd samples(3, grasps.size());
-  for (int i = 0; i < grasps.size(); i++)
-  {
-    samples.col(i) = grasps[i].getSample();
-  }
   if (plot_samples)
   {
+    Plot plotter;
+    Eigen::Matrix3Xd samples(3, grasps.size());
+    for (int i = 0; i < grasps.size(); i++)
+    {
+      samples.col(i) = grasps[i].getSample();
+    }
+
     plotter.plotSamples(samples, cloud);
   }
 
@@ -232,18 +233,13 @@ bool HandSearch::reevaluateHypothesis(const PointList& point_list, const Grasp& 
   PointList point_list_frame = point_list.rotatePointList(hand.getFrame().transpose());
   point_list_cropped = point_list_frame.cropByHandHeight(params_.hand_height_);
 
-  // Evaluate finger location for this grasp.
-  finger_hand.evaluateFingers(point_list_cropped.getPoints(), hand.getTop(), hand.getFingerPlacementIndex());
-
   // Check that the finger placement is possible.
-  if (finger_hand.getFingers().count() >= 2)
-  {
-    finger_hand.evaluateHand(hand.getFingerPlacementIndex());
+  finger_hand.evaluateFingers(point_list_cropped.getPoints(), hand.getTop(), hand.getFingerPlacementIndex());
+  finger_hand.evaluateHand(hand.getFingerPlacementIndex());
 
-    if (finger_hand.getHand().count() > 0)
-    {
-      return true;
-    }
+  if (finger_hand.getHand().any())
+  {
+    return true;
   }
 
   return false;

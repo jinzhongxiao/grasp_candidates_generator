@@ -211,6 +211,11 @@ public:
   void calculateNormals(int num_threads);
 
   /**
+   * \brief Reverse direction of surface normals (if a normal does not point to at least one camera).
+   */
+  void reverseNormals();
+
+  /**
    * \brief Set surface normals from a file.
    * \param[in] filename the location of the file
   */

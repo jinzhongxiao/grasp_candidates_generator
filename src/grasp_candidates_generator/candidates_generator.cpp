@@ -18,7 +18,7 @@ void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
   std::cout << "Processing cloud with: " << cloud_cam.getCloudOriginal()->size() << " points.\n";
 
   // Calculate surface normals using integral images if possible.
-  if (cloud_cam.getCloudOriginal()->isOrganized())
+  if (cloud_cam.getCloudOriginal()->isOrganized() && cloud_cam.getNormals().cols() == 0)
   {
     cloud_cam.calculateNormals(0);
   }
@@ -57,10 +57,10 @@ void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
     if (cloud_cam.getSamples().cols() > 0)
     {
       // 4. Calculate surface normals.
-	  if (cloud_cam.getNormals().cols() == 0)
-	  {
-		cloud_cam.calculateNormals(params_.num_threads_);
-	  }
+      if (cloud_cam.getNormals().cols() == 0)
+      {
+        cloud_cam.calculateNormals(params_.num_threads_);
+      }
 
       // 5. Subsample the remaining samples.
       cloud_cam.subsampleSamples(params_.num_samples_);
@@ -108,18 +108,7 @@ void CandidatesGenerator::preprocessPointCloud(CloudCamera& cloud_cam)
 
   if (params_.plot_normals_)
   {
-	// if (cloud_cam.getSamples().cols() == 0)
 	  plotter_.plotNormals(cloud_cam.getCloudProcessed(), cloud_cam.getNormals());
-	// else
-	// {
-//		PointCloudRGB::Ptr cloud_samples(new PointCloudRGB);
-//		cloud_samples->resize(cloud_cam.getSamples().cols());
-//		for (int i = 0; i < cloud_cam.getSamples().cols(); i++)
-//		{
-//			cloud_samples->at(i).getVector3fMap() = cloud_cam.getSamples().col(i).cast<float>();
-//		}
-//		plotter_.plotNormals(cloud_cam.getCloudProcessed(), cloud_samples, cloud_cam.getNormals());
-	// }
   }
 }
 
@@ -166,4 +155,11 @@ std::vector<GraspSet> CandidatesGenerator::generateGraspCandidateSets(const Clou
   }
 
   return hand_set_list;
+}
+
+
+std::vector<Grasp> CandidatesGenerator::reevaluateHypotheses(const CloudCamera& cloud_cam,
+  const std::vector<Grasp>& grasps)
+{
+  return hand_search_->reevaluateHypotheses(cloud_cam, grasps);
 }

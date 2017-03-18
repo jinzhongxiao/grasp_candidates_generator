@@ -36,7 +36,7 @@ int Antipodal::evaluateGrasp(const PointList& point_list, double extremal_thresh
   double min_x = pts.row(lateral_axis).minCoeff() + extremal_thresh;
   double max_x = pts.row(lateral_axis).maxCoeff() - extremal_thresh;
   std::vector<int> left_idx_viable, right_idx_viable;
-  //  std::cout << "min_y, max_y: " << min_x << ", " << max_x << std::endl;
+//  std::cout << "min_y, max_y: " << min_x << ", " << max_x << std::endl;
 
   for (int i=0; i < pts.cols(); i++)
   {

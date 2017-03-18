@@ -246,13 +246,17 @@ Grasp GraspSet::createHypothesis(const Eigen::Vector3d& sample, const PointList&
   // extract data for classification
   PointList point_list_learning = point_list.slice(indices_learning);
 
+//  std::cout << point_list_learning.getPoints().block(0,0,3,5) << "\n";
+//  std::cout << "---------------\n";
+//  std::cout << point_list_learning.getNormals().block(0,0,3,5) << "\n";
+
   // calculate grasp width (hand opening width)
   double width = point_list_learning.getPoints().row(0).maxCoeff() - point_list_learning.getPoints().row(0).minCoeff();
 
   Grasp hand(sample, hand_frame, finger_hand, width);
 
   // evaluate if the grasp is antipodal
-  labelHypothesis(point_list, finger_hand, hand);
+  labelHypothesis(point_list_learning, finger_hand, hand);
 
   return hand;
 }
