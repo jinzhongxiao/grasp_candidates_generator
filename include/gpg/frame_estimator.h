@@ -42,8 +42,8 @@
 
 #include <omp.h>
 
-#include <grasp_candidates_generator/cloud_camera.h>
-#include <grasp_candidates_generator/local_frame.h>
+#include <gpg/cloud_camera.h>
+#include <gpg/local_frame.h>
 
 
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;

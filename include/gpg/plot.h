@@ -36,10 +36,10 @@
 
 #include <pcl/visualization/pcl_visualizer.h>
 
-#include <grasp_candidates_generator/cloud_camera.h>
-#include <grasp_candidates_generator/grasp.h>
-#include <grasp_candidates_generator/grasp_set.h>
-#include <grasp_candidates_generator/local_frame.h>
+#include <gpg/cloud_camera.h>
+#include <gpg/grasp.h>
+#include <gpg/grasp_set.h>
+#include <gpg/local_frame.h>
 
 
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;

@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/grasp.h>
+#include <gpg/grasp.h>
 
 
 Grasp::Grasp() : grasp_width_(0.0), label_(0.0, false, false)

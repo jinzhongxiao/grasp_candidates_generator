@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/frame_estimator.h>
+#include <gpg/frame_estimator.h>
 
 
 std::vector<LocalFrame> FrameEstimator::calculateLocalFrames(const CloudCamera& cloud_cam,

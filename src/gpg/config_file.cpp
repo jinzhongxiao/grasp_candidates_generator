@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/config_file.h>
+#include <gpg/config_file.h>
 
 
 void ConfigFile::removeComment(std::string &line) const

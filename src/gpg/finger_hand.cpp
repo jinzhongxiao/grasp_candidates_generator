@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/finger_hand.h>
+#include <gpg/finger_hand.h>
 
 
 FingerHand::FingerHand(double finger_width, double hand_outer_diameter,	double hand_depth)

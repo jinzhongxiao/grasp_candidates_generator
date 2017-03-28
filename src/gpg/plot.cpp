@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/plot.h>
+#include <gpg/plot.h>
 
 
 void Plot::plotFingers(const std::vector<GraspSet>& hand_set_list, const PointCloudRGBA::Ptr& cloud,

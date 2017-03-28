@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/local_frame.h>
+#include <gpg/local_frame.h>
 
 
 void LocalFrame::print()

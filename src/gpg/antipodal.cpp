@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/antipodal.h>
+#include <gpg/antipodal.h>
 
 const int Antipodal::NO_GRASP = 0; // normals point not toward any finger
 const int Antipodal::HALF_GRASP = 1; // normals point towards one finger

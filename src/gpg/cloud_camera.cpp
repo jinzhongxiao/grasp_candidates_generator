@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/cloud_camera.h>
+#include <gpg/cloud_camera.h>
 
 
 CloudCamera::CloudCamera()

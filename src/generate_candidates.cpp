@@ -4,9 +4,9 @@
 #include <vector>
 
 // Custom
-#include <grasp_candidates_generator/candidates_generator.h>
-#include <grasp_candidates_generator/hand_search.h>
-#include <grasp_candidates_generator/config_file.h>
+#include <gpg/candidates_generator.h>
+#include <gpg/hand_search.h>
+#include <gpg/config_file.h>
 
 
 // function to read in a double array from a single line of a configuration file

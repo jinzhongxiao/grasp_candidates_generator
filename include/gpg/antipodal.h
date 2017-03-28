@@ -40,7 +40,7 @@
 
 #include <Eigen/Dense>
 
-#include <grasp_candidates_generator/point_list.h>
+#include <gpg/point_list.h>
 
 
 /** Antipodal class

@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/point_list.h>
+#include <gpg/point_list.h>
 
 
 PointList::PointList(int size, int num_cams)

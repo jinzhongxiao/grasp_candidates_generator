@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/hand_search.h>
+#include <gpg/hand_search.h>
 
 
 const int HandSearch::ROTATION_AXIS_NORMAL = 0;

@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/grasp_set.h>
+#include <gpg/grasp_set.h>
 
 
 const int GraspSet::ROTATION_AXIS_NORMAL = 0;
@@ -133,7 +133,7 @@ Eigen::Matrix3Xd GraspSet::calculateShadow4(const PointList& point_list, double 
 
       // Calculate occluded points.
       //      shadows[i] = calculateVoxelizedShadowVectorized4(point_list, shadow_vec, num_shadow_points, voxel_grid_size);
-      calculateVoxelizedShadowVectorized4(point_list.getPoints(), shadow_vec, num_shadow_points, voxel_grid_size, shadows[i]);
+      calculateVoxelizedShadowVectorized(point_list.getPoints(), shadow_vec, num_shadow_points, voxel_grid_size, shadows[i]);
     }
   }
 
@@ -195,7 +195,7 @@ Eigen::Matrix3Xd GraspSet::shadowVoxelsToPoints(const std::vector<Eigen::Vector3
 }
 
 
-void GraspSet::calculateVoxelizedShadowVectorized4(const Eigen::Matrix3Xd& points,
+void GraspSet::calculateVoxelizedShadowVectorized(const Eigen::Matrix3Xd& points,
   const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size, Vector3iSet& shadow_set) const
 {
   double t0_set = omp_get_wtime();
@@ -213,7 +213,7 @@ void GraspSet::calculateVoxelizedShadowVectorized4(const Eigen::Matrix3Xd& point
 
   if (MEASURE_TIME)
     printf("Shadow (1 camera) calculation. Runtime: %.3f, #points: %d, num_shadow_points: %d, #shadow: %d, max #shadow: %d\n",
-      omp_get_wtime() - t0_set, points.cols(), num_shadow_points, shadow_set.size(), n);
+      omp_get_wtime() - t0_set, (int) points.cols(), num_shadow_points, (int) shadow_set.size(), n);
   //    std::cout << "Calculated shadow for 1 camera. Runtime: " << omp_get_wtime() - t0_set << ", #points: " << n << "\n";
 }
 

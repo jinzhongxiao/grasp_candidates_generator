@@ -52,11 +52,11 @@
 #include <unsupported/Eigen/AlignedVector3>
 
 // Custom
-#include <grasp_candidates_generator/antipodal.h>
-#include <grasp_candidates_generator/finger_hand.h>
-#include <grasp_candidates_generator/grasp.h>
-#include <grasp_candidates_generator/local_frame.h>
-#include <grasp_candidates_generator/point_list.h>
+#include <gpg/antipodal.h>
+#include <gpg/finger_hand.h>
+#include <gpg/grasp.h>
+#include <gpg/local_frame.h>
+#include <gpg/point_list.h>
 
 
 // The hash and equality functions below are necessary for boost's unordered set.
@@ -249,7 +249,7 @@ class GraspSet
      * \param[in] voxel_grid_size the size of the voxel grid
      * \param[out] shadow_set the set of shadow points
      */
-    void calculateVoxelizedShadowVectorized4(const Eigen::Matrix3Xd& points,
+    void calculateVoxelizedShadowVectorized(const Eigen::Matrix3Xd& points,
       const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size, Vector3iSet& shadow_set) const;
 
     /**

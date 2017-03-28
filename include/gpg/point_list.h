@@ -38,7 +38,7 @@
 
 #include <vector>
 
-#include <grasp_candidates_generator/eigen_utils.h>
+#include <gpg/eigen_utils.h>
 
 
 /** PointList class

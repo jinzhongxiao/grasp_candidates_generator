@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/candidates_generator.h>
+#include <gpg/candidates_generator.h>
 
 
 CandidatesGenerator::CandidatesGenerator(const Parameters& params,

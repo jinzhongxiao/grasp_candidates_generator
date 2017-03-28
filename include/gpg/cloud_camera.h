@@ -50,7 +50,7 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
-#include <grasp_candidates_generator/eigen_utils.h>
+#include <gpg/eigen_utils.h>
 
 
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGB;

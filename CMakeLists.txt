@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(grasp_candidates_generator)
+project(gpg)
 set(CMAKE_BUILD_TYPE Release)
 
 # Eigen library
@@ -101,4 +101,4 @@ set_target_properties(${PROJECT_NAME}_grasp_candidates_generator
 install(TARGETS ${PROJECT_NAME}_grasp_candidates_generator 
         DESTINATION /usr/lib)
 
-install(DIRECTORY include/grasp_candidates_generator DESTINATION /usr/local/include)
+install(DIRECTORY include/gpg DESTINATION /usr/local/include)

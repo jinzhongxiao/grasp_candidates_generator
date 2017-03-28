@@ -46,7 +46,7 @@
 #include <vector>
 
 // custom
-#include <grasp_candidates_generator/finger_hand.h>
+#include <gpg/finger_hand.h>
 
 
 struct GraspPose

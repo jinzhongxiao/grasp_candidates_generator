@@ -1,4 +1,4 @@
-#include <grasp_candidates_generator/eigen_utils.h>
+#include <gpg/eigen_utils.h>
 
 
 Eigen::Matrix3Xd EigenUtils::sliceMatrix(const Eigen::Matrix3Xd& mat, const std::vector<int>& indices)
