@@ -218,28 +218,6 @@ void GraspSet::calculateVoxelizedShadowVectorized(const Eigen::Matrix3Xd& points
 }
 
 
-Eigen::VectorXi GraspSet::floorVector(const Eigen::VectorXd& a) const
-{
-  Eigen::VectorXi b(a.size());
-
-  for (int i = 0; i < b.size(); i++)
-  {
-    b(i) = floor((double) a(i));
-  }
-
-  return b;
-}
-
-
-inline void GraspSet::floorVector(Eigen::Vector3d& a) const
-{
-  for (int i = 0; i < a.size(); i++)
-  {
-    a(i) = floor((double) a(i));
-  }
-}
-
-
 Grasp GraspSet::createHypothesis(const Eigen::Vector3d& sample, const PointList& point_list,
   const std::vector<int>& indices_learning, const Eigen::Matrix3d& hand_frame, const FingerHand& finger_hand) const
 {

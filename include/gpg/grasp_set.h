@@ -253,13 +253,6 @@ class GraspSet
       const Eigen::Vector3d& shadow_vec, int num_shadow_points, double voxel_grid_size, Vector3iSet& shadow_set) const;
 
     /**
-     * \brief Round a floating point vector to the nearest, smaller integers.
-     * \param a the vector to be rounded
-     * \return the vector containing integers
-     */
-    Eigen::VectorXi floorVector(const Eigen::VectorXd& a) const;
-
-    /**
      * \brief Create a grasp candidate.
      * \param sample the center of the point neighborhood
      * \param point_list the point neighborhood
@@ -300,12 +293,6 @@ class GraspSet
      * source: http://software.intel.com/en-us/articles/fast-random-number-generator-on-the-intel-pentiumr-4-processor/
      */
     inline int fastrand() const;
-
-    /**
-     * \brief Round a floating point vector to the nearest, smaller integers in-place.
-     * \param[out] the vector to be rounded
-     */
-    inline void floorVector(Eigen::Vector3d& a) const;
 
     Eigen::Vector3d sample_; ///< the center of the point neighborhood
     std::vector<Grasp> hands_; ///< the grasps contained in this grasp set
